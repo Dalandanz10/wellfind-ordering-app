@@ -505,7 +505,7 @@
 
                     <!-- FINAL ORDER FORM -->
                     <div id="orderFormView" class="py-2 d-none">
-                        <div class="text-center mb-3"><img id="orderProductLogo" src="/static/C1.png" alt="Selected Product" class="img-fluid rounded bg-white p-2 mb-2 shadow-sm" style="height: 100px; object-fit: contain;" onerror="this.onerror=null; this.src='/static/C1.jpg';"><h5 class="fw-bold text-white mb-1" id="orderItemTitle">5 Gal Slim Container</h5></div>
+                        <div class="text-center mb-3"><img id="orderProductLogo" src="https://placehold.co/150x150/0c2340/38bdf8?text=Water" alt="Selected Product" class="img-fluid rounded bg-white p-2 mb-2 shadow-sm" style="height: 100px; object-fit: contain;" onerror="this.onerror=null; this.src='https://placehold.co/150x150/0c2340/38bdf8?text=Water';"><h5 class="fw-bold text-white mb-1" id="orderItemTitle">5 Gal Slim Container</h5></div>
                         <div class="mb-3 p-3 rounded-3 bg-white bg-opacity-10 small">
                             <div class="d-flex justify-content-between align-items-center"><div><span class="text-light opacity-75 d-block">Delivery Address:</span><strong class="text-white" id="displayOrderAddress"></strong></div><button type="button" id="toggleAddressEditBtn" class="btn btn-sm btn-outline-info rounded-pill">Change address</button></div>
                             <div id="customAddressBox" class="mt-2 d-none"><input type="text" id="orderAddress" class="form-control form-control-sm py-1" placeholder="Enter alternate delivery address"></div>
@@ -590,7 +590,7 @@
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Firebase SDK & Store Logic (Primary Default Instance) -->
+    <!-- Firebase SDK & Store Logic -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -614,7 +614,7 @@
         const modal = new bootstrap.Modal(modalElement);
 
         let itemUnitPrice = 35; 
-        let currentProductImage = "/static/C1.png";
+        let currentProductImage = "https://placehold.co/150x150/0c2340/38bdf8?text=Water";
         let selectedDeliveryDate = getTodayDate();
         let orderToCancelId = null;
         let orderToEditId = null;
@@ -747,7 +747,6 @@
             });
         }
 
-        // LOAD CLOUD USER PROFILE & LISTEN TO ORDERS
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -790,7 +789,6 @@
             }
         });
 
-        // SAVE PROFILE TO FIRESTORE DIRECTLY
         document.getElementById('saveProfileBtn').addEventListener('click', async () => {
             const newMobile = document.getElementById('editMobile').value.trim();
             const newAddress = document.getElementById('editAddress').value.trim();
@@ -842,8 +840,8 @@
         document.getElementById('chooseRefill').addEventListener('click', () => {
             document.getElementById('cartCatalogTitle').innerText = "Refill Options";
             document.getElementById('productContainerGrid').innerHTML = `
-                <div class="col-md-6"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C1.png" alt="5 Gal Slim Refill" class="img-fluid rounded" style="height: 150px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C1.jpg';"><span class="badge bg-primary text-white position-absolute top-0 end-0 m-1 small">REFILL</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL SLIM REFILL</h6><div class="mb-2"><span class="fw-bold text-primary">₱35.00 / refill</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Slim Refill" data-price="35" data-img="/static/C1.png">Select Refill</button></div></div>
-                <div class="col-md-6"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C3.png" alt="5 Gal Round Refill" class="img-fluid rounded" style="height: 150px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C3.jpg';"><span class="badge bg-primary text-white position-absolute top-0 end-0 m-1 small">REFILL</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL ROUND REFILL</h6><div class="mb-2"><span class="fw-bold text-primary">₱35.00 / refill</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Round Refill" data-price="35" data-img="/static/C3.png">Select Refill</button></div></div>
+                <div class="col-md-6"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="https://placehold.co/150x150/0c2340/38bdf8?text=Slim+Refill" alt="5 Gal Slim Refill" class="img-fluid rounded" style="height: 150px; object-fit: contain; width: 100%;"><span class="badge bg-primary text-white position-absolute top-0 end-0 m-1 small">REFILL</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL SLIM REFILL</h6><div class="mb-2"><span class="fw-bold text-primary">₱35.00 / refill</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Slim Refill" data-price="35" data-img="https://placehold.co/150x150/0c2340/38bdf8?text=Slim+Refill">Select Refill</button></div></div>
+                <div class="col-md-6"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="https://placehold.co/150x150/0c2340/38bdf8?text=Round+Refill" alt="5 Gal Round Refill" class="img-fluid rounded" style="height: 150px; object-fit: contain; width: 100%;"><span class="badge bg-primary text-white position-absolute top-0 end-0 m-1 small">REFILL</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL ROUND REFILL</h6><div class="mb-2"><span class="fw-bold text-primary">₱35.00 / refill</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Round Refill" data-price="35" data-img="https://placehold.co/150x150/0c2340/38bdf8?text=Round+Refill">Select Refill</button></div></div>
             `;
             attachProductListeners();
             showView('cartStoreView', 'Refill Catalog');
@@ -852,9 +850,9 @@
         document.getElementById('chooseBuyWithContainer').addEventListener('click', () => {
             document.getElementById('cartCatalogTitle').innerText = "Container & Package Options";
             document.getElementById('productContainerGrid').innerHTML = `
-                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C1.png" alt="5 Gal Slim Container" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C1.jpg';"><span class="badge bg-dark text-white position-absolute top-0 end-0 m-1 small">PACKAGE</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL SLIM CONTAINER W/ WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱180.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Slim Container w/ Water" data-price="180" data-img="/static/C1.png">Select Item</button></div></div>
-                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C2.png" alt="Bottled Water Pack" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C2.jpg';"><span class="badge bg-success text-white position-absolute top-0 end-0 m-1 small">PACK</span></div><h6 class="fw-bold text-dark small mb-1">10X 350ML BOTTLED WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱90.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="10x 350ml Bottled Water" data-price="90" data-img="/static/C2.png">Select Item</button></div></div>
-                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C3.png" alt="5 Gal Round Container" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C3.jpg';"><span class="badge bg-dark text-white position-absolute top-0 end-0 m-1 small">PACKAGE</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL ROUND CONTAINER W/ WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱180.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Round Container w/ Water" data-price="180" data-img="/static/C3.png">Select Item</button></div></div>
+                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="https://placehold.co/150x150/0c2340/38bdf8?text=Slim+Container" alt="5 Gal Slim Container" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;"><span class="badge bg-dark text-white position-absolute top-0 end-0 m-1 small">PACKAGE</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL SLIM CONTAINER W/ WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱180.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Slim Container w/ Water" data-price="180" data-img="https://placehold.co/150x150/0c2340/38bdf8?text=Slim+Container">Select Item</button></div></div>
+                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="https://placehold.co/150x150/0c2340/38bdf8?text=Bottled+Water" alt="Bottled Water Pack" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;"><span class="badge bg-success text-white position-absolute top-0 end-0 m-1 small">PACK</span></div><h6 class="fw-bold text-dark small mb-1">10X 350ML BOTTLED WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱90.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="10x 350ml Bottled Water" data-price="90" data-img="https://placehold.co/150x150/0c2340/38bdf8?text=Bottled+Water">Select Item</button></div></div>
+                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="https://placehold.co/150x150/0c2340/38bdf8?text=Round+Container" alt="5 Gal Round Container" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;"><span class="badge bg-dark text-white position-absolute top-0 end-0 m-1 small">PACKAGE</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL ROUND CONTAINER W/ WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱180.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Round Container w/ Water" data-price="180" data-img="https://placehold.co/150x150/0c2340/38bdf8?text=Round+Container">Select Item</button></div></div>
             `;
             attachProductListeners();
             showView('cartStoreView', 'Container Package Catalog');
@@ -955,7 +953,6 @@
             } catch (error) { showAlert("Sign In Error: " + error.message); }
         });
 
-        // REGISTRATION SAVES FULL PROFILE TO FIRESTORE
         document.getElementById('signUpBtn').addEventListener('click', async () => {
             const name = document.getElementById('signUpName').value.trim();
             const mobile = document.getElementById('signUpMobile').value.trim();
@@ -991,7 +988,6 @@
             else { showAlert("Email not verified yet. Please check your inbox!"); }
         });
 
-        // CUSTOMER LOGOUT - CLEARS ONLY CUSTOMER STORAGE (DOES NOT TOUCH ADMIN APP)
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             await signOut(auth);
             localStorage.removeItem('wellfind_name');
@@ -1004,7 +1000,6 @@
         document.getElementById('proceedToOrderBtn').addEventListener('click', () => { showView('orderChoiceView', 'Select Order Type'); });
         document.getElementById('cancelOrderBtn').addEventListener('click', () => { showView('cartStoreView', 'Select Item'); });
 
-        // ORDER PLACEMENT
         document.getElementById('submitOrderBtn').addEventListener('click', async () => {
             const submitBtn = document.getElementById('submitOrderBtn');
             submitBtn.disabled = true;
@@ -1046,7 +1041,6 @@
 
         window.cancelOrder = function(orderId) { orderToCancelId = orderId; showView('cancelConfirmView', 'Cancel Order'); }
 
-        // CUSTOMER CANCELLATION UPDATES FIRESTORE STATUS
         document.getElementById('confirmCancelYes').addEventListener('click', async () => {
             if (orderToCancelId) {
                 const targetOrder = activeOrdersCache.find(ord => (ord.firestoreId === orderToCancelId || ord.id === orderToCancelId));
@@ -1104,7 +1098,6 @@
             renderOrdersHistory();
         };
 
-        // RENDER CUSTOMER 3-TIER HISTORY
         function renderOrdersHistory() {
             const orders = activeOrdersCache.length > 0 ? activeOrdersCache : JSON.parse(localStorage.getItem('wellfind_orders') || '[]');
             const container = document.getElementById('ordersListContainer');
