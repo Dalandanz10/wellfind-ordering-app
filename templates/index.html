@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wellfind — Pure & Safe Drinking Water Refilling Station</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #050b14 0%, #0c2340 40%, #0284c7 100%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .bg-bubbles {
+            position: fixed;
+            bottom: 0;
+            right: 5%;
+            width: 300px;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -60px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 50%;
+            animation: riseUp 7s ease-in-out infinite;
+        }
+
+        .bubble:nth-child(1) { width: 45px; height: 45px; right: 20px; animation-delay: 0s; animation-duration: 6s; }
+        .bubble:nth-child(2) { width: 25px; height: 25px; right: 90px; animation-delay: 1.8s; animation-duration: 5s; }
+        .bubble:nth-child(3) { width: 65px; height: 65px; right: 140px; animation-delay: 0.5s; animation-duration: 8s; }
+        .bubble:nth-child(4) { width: 30px; height: 30px; right: 210px; animation-delay: 3s; animation-duration: 5.5s; }
+        .bubble:nth-child(5) { width: 50px; height: 50px; right: 260px; animation-delay: 1.2s; animation-duration: 7.5s; }
+
+        @keyframes riseUp {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            25% { opacity: 0.8; }
+            100% { transform: translateY(-85vh) scale(1.25); opacity: 0; }
+        }
+
+        .navbar {
+            background: rgba(5, 11, 20, 0.85)!important;
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .nav-icon-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8fafc;
+            font-size: 1.35rem;
+            position: relative;
+            transition: all 0.2s ease;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .nav-icon-btn:hover { 
+            color: #38bdf8; 
+            border-color: #38bdf8; 
+            background: rgba(56, 189, 248, 0.15); 
+        }
+        .order-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #0284c7;
+            color: white;
+            font-size: 0.7rem;
+            min-width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50px;
+            font-weight: 700;
+            border: 2px solid #050b14;
+        }
+
+        .hero-section {
+            padding: 140px 0 90px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 20px 40px rgba(2, 132, 199, 0.2);
+        }
+
+        /* Centered Waterdrop Station Status Card */
+        .station-card {
+            background: rgba(12, 35, 64, 0.85);
+            backdrop-filter: blur(18px);
+            border: 2px solid rgba(56, 189, 248, 0.4);
+            border-radius: 0% 100% 50% 50% / 0% 50% 50% 100%;
+            transform: rotate(45deg);
+            box-shadow: 0 25px 50px rgba(2, 132, 199, 0.3);
+            position: relative;
+            width: 340px;
+            height: 340px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            margin: 50px auto 30px auto;
+        }
+
+        .station-card-content {
+            transform: rotate(-45deg);
+            width: 240px;
+            text-align: center;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(45deg); }
+            50% { transform: translateY(-12px) rotate(45deg); }
+            100% { transform: translateY(0px) rotate(45deg); }
+        }
+        .floating-badge { animation: float 4.5s ease-in-out infinite; }
+
+        .store-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+            color: #0f172a;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .store-card:hover { transform: translateY(-5px); }
+
+        .choice-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .choice-card:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: #38bdf8;
+            transform: translateY(-3px);
+        }
+
+        .testimonial-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #fff;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-glow:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 25px rgba(56, 189, 248, 0.6);
+            color: #fff;
+        }
+
+        .badge-pill {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+        }
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+        }
+        .form-control::placeholder { color: rgba(255, 255, 255, 0.4); }
+        .form-select option { background: #0c2340; color: #fff; }
+        .form-label { font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-bubbles">
+        <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg fixed-top py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-white d-flex align-items-center gap-2" href="#">
+                <span class="fs-4 text-info"><i class="bi bi-water"></i></span> WELLFIND
+            </a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center gap-3">
+                    <li class="nav-item"><a class="nav-link fw-medium text-light opacity-75" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium text-light opacity-75" href="#features">Why Us</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium text-light opacity-75" href="#process">Process</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium text-light opacity-75" href="#howitworks">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium text-light opacity-75" href="#testimonials">Reviews</a></li>
+                    
+                    <li class="nav-item d-flex align-items-center gap-2 ms-lg-3">
+                        <button class="nav-icon-btn position-relative" title="My Orders" id="ordersNavBtn">
+                            <i class="bi bi-clock-history"></i>
+                            <span class="order-badge" id="orderCountBadge">0</span>
+                        </button>
+                        <button class="nav-icon-btn" title="Account" id="profileNavBtn">
+                            <i class="bi bi-person"></i>
+                        </button>
+                    </li>
+
+                    <li class="nav-item ms-lg-2">
+                        <button class="btn btn-glow px-4 rounded-pill shadow-sm" id="orderNowNavBtn">Order Now</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section text-center text-lg-start">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7">
+                    <span class="badge badge-pill px-3 py-2 rounded-pill fw-semibold small mb-3 d-inline-block">
+                        <i class="bi bi-shield-check me-1"></i> DOH Standards & Pure Drinking Water
+                    </span>
+                    <h1 class="display-4 fw-extrabold mb-3 tracking-tight text-white">Pure, Refreshing Water. <span style="color: #38bdf8;">Delivered Fast.</span></h1>
+                    <p class="lead mb-4 text-light opacity-75" style="max-width: 550px;">Wellfind Water Refilling Station brings clean, multi-stage purified drinking water straight to your doorstep in San Mateo — anytime you need it.</p>
+                    <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                        <button class="btn btn-glow btn-lg px-5 py-3 rounded-pill" id="heroOrderBtn">Order Now</button>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center">
+                    <!-- Centered Waterdrop Station Status Card -->
+                    <div class="station-card floating-badge">
+                        <div class="station-card-content">
+                            <div class="fs-1 text-info mb-1" id="stationStatusIcon"><i class="bi bi-water"></i></div>
+                            <h5 class="fw-bold mb-1 text-white" id="stationStatusTitle">Checking...</h5>
+                            <p class="text-info small mb-2 fw-medium" id="stationHoursText">7:00 AM - 6:00 PM</p>
+                            <hr class="text-light opacity-25 my-2">
+                            <div class="d-flex justify-content-between small text-light opacity-75 px-2">
+                                <span>Status</span>
+                                <span class="fw-bold" id="stationStatusBadge">Loading</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section 1: Why Wellfind -->
+    <section id="features" class="py-5">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="badge badge-pill px-3 py-1 rounded-pill fw-semibold small mb-2 d-inline-block">WHY WELLFIND</span>
+                <h2 class="fw-bold text-white display-6">Water You Can Truly Trust</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="glass-card p-4 h-100"><div class="fs-1 mb-3 text-info"><i class="bi bi-truck"></i></div><h5 class="fw-bold mb-2 text-white">Rapid Local Dispatch</h5><p class="text-light opacity-75 small mb-0">Prompt same-day door-to-door delivery across residential zones, fully scheduled to your convenience.</p></div></div>
+                <div class="col-md-4"><div class="glass-card p-4 h-100"><div class="fs-1 mb-3 text-info"><i class="bi bi-shield-check"></i></div><h5 class="fw-bold mb-2 text-white">Advanced 35-Stage Purification</h5><p class="text-light opacity-75 small mb-0">Rigorous multi-phase filtration systems guaranteeing absolute safety, crystal clarity, and crisp taste.</p></div></div>
+                <div class="col-md-4"><div class="glass-card p-4 h-100"><div class="fs-1 mb-3 text-info"><i class="bi bi-tag"></i></div><h5 class="fw-bold mb-2 text-white">Budget-Friendly Pricing</h5><p class="text-light opacity-75 small mb-0">Transparent, pocket-friendly rates with special container bundles and refill discounts for households.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Our Process -->
+    <section id="process" class="py-5 border-top border-light border-opacity-10">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="badge badge-pill px-3 py-1 rounded-pill fw-semibold small mb-2 d-inline-block">OUR PROCESS</span>
+                <h2 class="fw-bold text-white display-6">35 Stages of Water Filtration</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="glass-card p-4 h-100"><span class="text-info fw-bold small">STAGES 01–12</span><h5 class="fw-bold mb-2 text-white mt-1">Sediment & Carbon Pre-Filtration</h5><p class="text-light opacity-75 small mb-0">Extracts sand, rust, silt, chlorine, and organic compounds.</p></div></div>
+                <div class="col-md-4"><div class="glass-card p-4 h-100"><span class="text-info fw-bold small">STAGES 13–24</span><h5 class="fw-bold mb-2 text-white mt-1">Reverse Osmosis & UV Sterilization</h5><p class="text-light opacity-75 small mb-0">Microscopic impurity barrier paired with intense UV disinfection.</p></div></div>
+                <div class="col-md-4"><div class="glass-card p-4 h-100"><span class="text-info fw-bold small">STAGES 25–35</span><h5 class="fw-bold mb-2 text-white mt-1">Mineral Balancing & Ozone Polish</h5><p class="text-light opacity-75 small mb-0">Reintroduces beneficial minerals and sterilizes right before bottling.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: How Ordering Works -->
+    <section id="howitworks" class="py-5 border-top border-light border-opacity-10">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="badge badge-pill px-3 py-1 rounded-pill fw-semibold small mb-2 d-inline-block">SIMPLE PROCESS</span>
+                <h2 class="fw-bold text-white display-6">How Ordering Works</h2>
+            </div>
+            <div class="row g-4 text-center">
+                <div class="col-md-3"><div class="glass-card p-4 h-100"><div class="fs-1 mb-3 text-info"><i class="bi bi-cart3"></i></div><h5 class="fw-bold mb-2 text-white">1. Place Order</h5><p class="text-light opacity-75 small mb-0">Choose between refills or brand new containers.</p></div></div>
+                <div class="col-md-3"><div class="glass-card p-4 h-100"><div class="fs-1 mb-3 text-info"><i class="bi bi-droplet"></i></div><h5 class="fw-bold mb-2 text-white">2. Purification</h5><p class="text-light opacity-75 small mb-0">Station sanitizes and prepares your items.</p></div></div>
+                <div class="col-md-3"><div class="glass-card p-4 h-100"><div class="fs-1 mb-3 text-info"><i class="bi bi-truck"></i></div><h5 class="fw-bold mb-2 text-white">3. Doorstep Delivery</h5><p class="text-light opacity-75 small mb-0">Crew brings purified water straight to your kitchen.</p></div></div>
+                <div class="col-md-3"><div class="glass-card p-4 h-100"><div class="fs-1 mb-3 text-info"><i class="bi bi-cup-straw"></i></div><h5 class="fw-bold mb-2 text-white">4. Enjoy Hydration</h5><p class="text-light opacity-75 small mb-0">Stay refreshed with safe drinking water daily.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Testimonials / Customer Reviews -->
+    <section id="testimonials" class="py-5 border-top border-light border-opacity-10">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="badge badge-pill px-3 py-1 rounded-pill fw-semibold small mb-2 d-inline-block">TESTIMONIALS</span>
+                <h2 class="fw-bold text-white display-6">What Our Customers Say</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="text-warning mb-3 small">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-light opacity-90 fst-italic mb-4">
+                                "Deliveries always arrive right on time. The purified taste is noticeably crisper and cleaner compared to any other refilling station we've tried in the neighborhood."
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between pt-3 border-top border-light border-opacity-10">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="testimonial-avatar">M</div>
+                                <div>
+                                    <h6 class="fw-bold text-white mb-0 small">Maria Santos</h6>
+                                    <small class="text-light opacity-50 extra-small">San Mateo Resident</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 rounded-pill px-2 py-1 extra-small">
+                                <i class="bi bi-check2 me-1"></i>Verified
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="text-warning mb-3 small">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-light opacity-90 fst-italic mb-4">
+                                "We order bulk containers for our café every week. Wellfind has been exceptionally reliable, transparent with their billing, and always accommodating to our rush delivery slots."
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between pt-3 border-top border-light border-opacity-10">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="testimonial-avatar">J</div>
+                                <div>
+                                    <h6 class="fw-bold text-white mb-0 small">Jun Dela Cruz</h6>
+                                    <small class="text-light opacity-50 extra-small">Local Café Owner</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 rounded-pill px-2 py-1 extra-small">
+                                <i class="bi bi-check2 me-1"></i>Verified
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="text-warning mb-3 small">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                            </div>
+                            <p class="text-light opacity-90 fst-italic mb-4">
+                                "Having 35-stage filtration gives our family genuine peace of mind. Knowing my kids have safe, sanitized drinking water every single day is priceless."
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between pt-3 border-top border-light border-opacity-10">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="testimonial-avatar">A</div>
+                                <div>
+                                    <h6 class="fw-bold text-white mb-0 small">Angela Reyes</h6>
+                                    <small class="text-light opacity-50 extra-small">Household Parent</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 rounded-pill px-2 py-1 extra-small">
+                                <i class="bi bi-check2 me-1"></i>Verified
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 text-center border-top border-light border-opacity-10">
+        <div class="container">
+            <p class="small text-light opacity-50 mb-0">&copy; 2026 Wellfind Water Refilling Station. Capstone Project — All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Dynamic Customer Modal -->
+    <div class="modal fade" id="mainModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="glass-card modal-content border-light border-opacity-25 p-3 text-white" style="background: rgba(12, 35, 64, 0.98); backdrop-filter: blur(20px);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-white" id="modalTitle">Customer Portal</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalAlertBox" class="alert alert-danger bg-danger bg-opacity-25 text-danger border-danger border-opacity-25 small mb-3 d-none"><span id="modalAlertText"></span></div>
+
+                    <!-- SIGN IN -->
+                    <div id="signInView" class="py-2">
+                        <div class="text-center mb-3"><span class="fs-2 text-info"><i class="bi bi-shield-lock"></i></span><h5 class="fw-bold text-white mt-1">Welcome Back</h5><p class="text-light opacity-75 small">Sign in to your Wellfind account.</p></div>
+                        <div class="mb-2"><label class="form-label text-light opacity-75 fw-semibold">Email Address</label><input type="email" id="signInEmail" class="form-control py-2" placeholder="name@example.com"></div>
+                        <div class="mb-3"><label class="form-label text-light opacity-75 fw-semibold">Password</label><input type="password" id="signInPassword" class="form-control py-2" placeholder="••••••••"></div>
+                        <button id="signInBtn" class="btn btn-glow w-100 py-3 rounded-pill shadow-sm mb-3">Sign In</button>
+                        <div class="text-center small"><span class="text-light opacity-75">Don't have an account yet?</span> <a href="#" id="switchToSignUp" class="text-info fw-semibold text-decoration-none">Sign up</a></div>
+                    </div>
+
+                    <!-- SIGN UP -->
+                    <div id="signUpView" class="py-2 d-none">
+                        <div class="text-center mb-3"><span class="fs-2 text-info"><i class="bi bi-person-plus"></i></span><h5 class="fw-bold text-white mt-1">Create Account</h5><p class="text-light opacity-75 small">Enter your delivery profile details.</p></div>
+                        <div class="mb-2"><label class="form-label text-light opacity-75 fw-semibold">Full Name</label><input type="text" id="signUpName" class="form-control py-2" placeholder="Juan Dela Cruz"></div>
+                        <div class="mb-2"><label class="form-label text-light opacity-75 fw-semibold">Mobile Number</label><input type="tel" id="signUpMobile" class="form-control py-2" placeholder="09123456789"></div>
+                        <div class="mb-2"><label class="form-label text-light opacity-75 fw-semibold">Email Address</label><input type="email" id="signUpEmail" class="form-control py-2" placeholder="name@example.com"></div>
+                        <div class="mb-2"><label class="form-label text-light opacity-75 fw-semibold">Password</label><input type="password" id="signUpPassword" class="form-control py-2" placeholder="At least 6 characters"></div>
+                        <div class="mb-3"><label class="form-label text-light opacity-75 fw-semibold">Exact Delivery Address</label><textarea id="signUpAddress" class="form-control py-2" rows="2">#48 J. Abad Santos Street, San Mateo</textarea></div>
+                        <button id="signUpBtn" class="btn btn-glow w-100 py-3 rounded-pill shadow-sm mb-3">Register & Send Verification</button>
+                        <div class="text-center small"><span class="text-light opacity-75">Already have an account?</span> <a href="#" id="switchToSignIn" class="text-info fw-semibold text-decoration-none">Sign in</a></div>
+                    </div>
+
+                    <!-- EMAIL VERIFICATION -->
+                    <div id="verifyEmailView" class="py-3 text-center d-none">
+                        <div class="mb-3 text-info fs-1"><i class="bi bi-envelope-check"></i></div>
+                        <h5 class="fw-bold text-white mb-2">Verify Your Email</h5>
+                        <p class="text-light opacity-75 small mb-4">We sent a verification link to <span id="displayVerifyEmail" class="fw-bold text-info"></span>.<br>Please click the link, then click below.</p>
+                        <button id="checkVerificationBtn" class="btn btn-glow w-100 py-3 rounded-pill shadow-sm fw-semibold">I Have Verified My Email</button>
+                    </div>
+
+                    <!-- PROFILE DASHBOARD -->
+                    <div id="profileView" class="py-2 d-none">
+                        <div class="text-center mb-3"><div class="bg-info bg-opacity-25 text-info d-inline-block p-3 rounded-circle fs-3 mb-2"><i class="bi bi-person-circle"></i></div><h5 class="fw-bold text-white mb-0" id="profileDisplayName">My Account</h5><p class="text-info small mb-0" id="profileDisplayEmail"></p></div>
+                        <div id="profileDisplayBox" class="p-3 rounded-3 bg-white bg-opacity-10 small mb-3">
+                            <p class="mb-1 text-light"><strong>Mobile:</strong> <span id="profileDisplayMobile"></span></p>
+                            <p class="mb-0 text-light"><strong>Delivery Address:</strong> <span id="profileDisplayAddress"></span></p>
+                        </div>
+                        <div id="profileEditBox" class="p-3 rounded-3 bg-white bg-opacity-10 small mb-3 d-none">
+                            <div class="mb-2"><label class="form-label text-light opacity-75 small fw-semibold">Mobile Number</label><input type="tel" id="editMobile" class="form-control form-control-sm py-1"></div>
+                            <div class="mb-2"><label class="form-label text-light opacity-75 small fw-semibold">Delivery Address</label><textarea id="editAddress" class="form-control form-control-sm py-1" rows="2"></textarea></div>
+                            <button id="saveProfileBtn" class="btn btn-success btn-sm w-100 rounded-pill fw-semibold">Save Changes to Cloud</button>
+                        </div>
+                        <button id="editProfileToggleBtn" class="btn btn-outline-info w-100 py-2 rounded-pill small mb-2">Edit Account Info</button>
+                        <button id="proceedToOrderBtn" class="btn btn-glow w-100 py-3 rounded-pill shadow-sm mb-2">Order Water Now</button>
+                        <button id="logoutBtn" class="btn btn-outline-danger w-100 py-2 rounded-pill small">Log Out</button>
+                    </div>
+
+                    <!-- ORDER CHOICE -->
+                    <div id="orderChoiceView" class="py-3 text-center d-none">
+                        <h5 class="fw-bold text-white mb-2">How would you like to order?</h5>
+                        <p class="text-light opacity-75 small mb-4">Choose your order type below to view available items.</p>
+                        <div class="row g-3">
+                            <div class="col-md-6"><div class="choice-card p-4 h-100 d-flex flex-column align-items-center" id="chooseRefill"><div class="fs-1 mb-2 text-info"><i class="bi bi-arrow-repeat"></i></div><h5 class="fw-bold text-white">Refill</h5><p class="text-light opacity-75 small mb-3">I already have containers and want them refilled.</p><button class="btn btn-outline-info rounded-pill px-4 mt-auto w-100">Select Refill</button></div></div>
+                            <div class="col-md-6"><div class="choice-card p-4 h-100 d-flex flex-column align-items-center" id="chooseBuyWithContainer"><div class="fs-1 mb-2 text-info"><i class="bi bi-box-seam"></i></div><h5 class="fw-bold text-white">Buy with Container</h5><p class="text-light opacity-75 small mb-3">I need brand new containers filled with water.</p><button class="btn btn-outline-info rounded-pill px-4 mt-auto w-100">Select Package</button></div></div>
+                        </div>
+                    </div>
+
+                    <!-- CART CATALOG -->
+                    <div id="cartStoreView" class="py-2 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold text-white mb-0" id="cartCatalogTitle">Select Item</h5><button class="btn btn-sm btn-outline-light rounded-pill" id="backToChoicesBtn">← Back to Choices</button></div>
+                        <div class="row g-3 justify-content-center" id="productContainerGrid"></div>
+                    </div>
+
+                    <!-- FINAL ORDER FORM -->
+                    <div id="orderFormView" class="py-2 d-none">
+                        <div class="text-center mb-3"><img id="orderProductLogo" src="/static/C1.png" alt="Selected Product" class="img-fluid rounded bg-white p-2 mb-2 shadow-sm" style="height: 100px; object-fit: contain;" onerror="this.onerror=null; this.src='/static/C1.jpg';"><h5 class="fw-bold text-white mb-1" id="orderItemTitle">5 Gal Slim Container</h5></div>
+                        <div class="mb-3 p-3 rounded-3 bg-white bg-opacity-10 small">
+                            <div class="d-flex justify-content-between align-items-center"><div><span class="text-light opacity-75 d-block">Delivery Address:</span><strong class="text-white" id="displayOrderAddress"></strong></div><button type="button" id="toggleAddressEditBtn" class="btn btn-sm btn-outline-info rounded-pill">Change address</button></div>
+                            <div id="customAddressBox" class="mt-2 d-none"><input type="text" id="orderAddress" class="form-control form-control-sm py-1" placeholder="Enter alternate delivery address"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-light opacity-75 fw-semibold">Delivery Date</label>
+                            <div class="d-flex gap-2 mb-2" id="dateButtonsContainer">
+                                <button type="button" class="btn btn-sm btn-outline-info flex-fill date-shortcut-btn active" data-day="today" id="todayBtn">Today</button>
+                                <button type="button" class="btn btn-sm btn-outline-light flex-fill date-shortcut-btn" data-day="tomorrow" id="tomorrowBtn">Tomorrow</button>
+                                <button type="button" id="toggleCustomDateBtn" class="btn btn-sm btn-outline-light flex-fill">Choose Date</button>
+                            </div>
+                            <small id="cutoffNotice" class="text-warning d-none mb-1 extra-small"><i class="bi bi-exclamation-triangle me-1"></i> Station is currently closed (7:00 AM - 6:00 PM). Same-day delivery closed.</small>
+                            <input type="date" id="deliveryDate" class="form-control py-2 d-none mt-2">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-light opacity-75 fw-semibold">Delivery Time Slot (7:00 AM - 6:00 PM)</label>
+                            <select id="deliveryTimeSlot" class="form-select py-2">
+                                <option value="ASAP (Within 1 Hour)">ASAP (Within 1 Hour)</option>
+                                <option value="Morning (7:00 AM - 11:00 AM)">Morning (7:00 AM - 11:00 AM)</option>
+                                <option value="Midday (11:00 AM - 2:00 PM)">Midday (11:00 AM - 2:00 PM)</option>
+                                <option value="Afternoon (2:00 PM - 6:00 PM)">Afternoon (2:00 PM - 6:00 PM)</option>
+                                <option value="Anytime during Station Hours (7:00 AM - 6:00 PM)">Anytime during Station Hours (7:00 AM - 6:00 PM)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3"><label class="form-label text-light opacity-75 fw-semibold">Quantity</label><input type="number" id="orderContainers" class="form-control py-2" value="1" min="1"></div>
+                        <div class="p-3 rounded-3 bg-info bg-opacity-10 border border-info border-opacity-25 mb-3 text-center"><span class="text-light opacity-75 small d-block">Total Cost Calculation</span><h3 class="fw-bold text-info mb-0" id="totalCostDisplay">₱35.00</h3></div>
+                        <div class="d-flex gap-2"><button id="submitOrderBtn" class="btn btn-glow w-75 py-3 rounded-pill shadow-sm">Confirm & Submit Order</button><button id="cancelOrderBtn" class="btn btn-outline-light w-25 py-3 rounded-pill">Cancel</button></div>
+                    </div>
+
+                    <!-- ORDERS HISTORY MODAL (3 SEGMENTED TABS) -->
+                    <div id="ordersHistoryView" class="py-2 d-none">
+                        <div class="text-center mb-3">
+                            <h5 class="fw-bold text-white mb-1">Your Delivery Orders</h5>
+                            <p class="text-light opacity-75 small mb-0">Track active dispatch progress and past deliveries.</p>
+                        </div>
+
+                        <!-- 3-Tab Segmented Selector -->
+                        <div class="d-flex gap-1 p-1 rounded-pill bg-white bg-opacity-10 mb-3">
+                            <button type="button" class="btn btn-sm btn-info rounded-pill flex-fill py-1 fw-semibold history-tab-btn active" data-tab="active" onclick="switchCustomerTab('active', this)">
+                                Active (<span id="custCountActive">0</span>)
+                            </button>
+                            <button type="button" class="btn btn-sm text-light rounded-pill flex-fill py-1 fw-semibold history-tab-btn" data-tab="delivered" onclick="switchCustomerTab('delivered', this)">
+                                Delivered (<span id="custCountDelivered">0</span>)
+                            </button>
+                            <button type="button" class="btn btn-sm text-light rounded-pill flex-fill py-1 fw-semibold history-tab-btn" data-tab="canceled" onclick="switchCustomerTab('canceled', this)">
+                                Canceled (<span id="custCountCanceled">0</span>)
+                            </button>
+                        </div>
+
+                        <div id="ordersListContainer">
+                            <div class="p-3 rounded-3 bg-white bg-opacity-10 text-center text-light opacity-75 small">Loading orders...</div>
+                        </div>
+                    </div>
+
+                    <!-- CANCEL CONFIRM -->
+                    <div id="cancelConfirmView" class="py-4 text-center d-none">
+                        <div class="fs-1 mb-2 text-warning"><i class="bi bi-exclamation-circle"></i></div>
+                        <h5 class="fw-bold text-white mb-2">Cancel Order?</h5>
+                        <p class="text-light opacity-75 small mb-4">Are you sure you want to cancel this order?</p>
+                        <div class="d-flex justify-content-center gap-3"><button id="confirmCancelYes" class="btn btn-danger px-4 rounded-pill">Yes, Cancel</button><button id="confirmCancelNo" class="btn btn-outline-light px-4 rounded-pill">Keep Order</button></div>
+                    </div>
+
+                    <!-- EDIT SCHEDULE -->
+                    <div id="editScheduleView" class="py-3 text-center d-none">
+                        <h5 class="fw-bold text-white mb-3">Edit Delivery Schedule</h5>
+                        <div class="mb-3 text-start"><label class="form-label text-light opacity-75 small fw-semibold">New Delivery Date</label><input type="date" id="editNewDate" class="form-control py-2"></div>
+                        <div class="d-flex justify-content-center gap-2"><button id="saveNewScheduleBtn" class="btn btn-success px-4 rounded-pill">Save Schedule</button><button id="cancelScheduleBtn" class="btn btn-outline-light px-4 rounded-pill">Back</button></div>
+                    </div>
+
+                    <!-- SUCCESS -->
+                    <div id="successMessageView" class="py-4 text-center d-none">
+                        <div class="fs-1 mb-2 text-success"><i class="bi bi-check-circle"></i></div>
+                        <h4 class="fw-bold text-white mb-2" id="successTitle">Success!</h4>
+                        <p class="text-light opacity-75 small mb-4" id="successText">Your action was completed successfully.</p>
+                        <button id="successOkBtn" class="btn btn-glow w-100 py-3 rounded-pill shadow-sm fw-semibold">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Firebase SDK & Store Logic (Primary Default Instance) -->
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBq-O2wMnfMWr9WyTSh_yyLtwutL7ff7TM",
+            authDomain: "wellfind-b7b5a.firebaseapp.com",
+            projectId: "wellfind-b7b5a",
+            storageBucket: "wellfind-b7b5a.firebasestorage.app",
+            messagingSenderId: "538142424703",
+            appId: "1:538142424703:web:415ccfcd82a71b4c53494a",
+            measurementId: "G-4GDMM90MH6"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const modalElement = document.getElementById('mainModal');
+        const modal = new bootstrap.Modal(modalElement);
+
+        let itemUnitPrice = 35; 
+        let currentProductImage = "/static/C1.png";
+        let selectedDeliveryDate = getTodayDate();
+        let orderToCancelId = null;
+        let orderToEditId = null;
+        let successNextAction = null;
+        let firestoreUnsubscribe = null;
+        let activeOrdersCache = [];
+        let currentCustomerTab = 'active';
+
+        function getTodayDate() { return new Date().toISOString().split('T')[0]; }
+        function getTomorrowDate() {
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            return d.toISOString().split('T')[0];
+        }
+
+        function isStationOpen() {
+            const currentHour = new Date().getHours();
+            return currentHour >= 7 && currentHour < 18;
+        }
+
+        function updateStationStatusCard() {
+            const isOpen = isStationOpen();
+            const titleEl = document.getElementById('stationStatusTitle');
+            const hoursEl = document.getElementById('stationHoursText');
+            const badgeEl = document.getElementById('stationStatusBadge');
+            const iconEl = document.getElementById('stationStatusIcon');
+
+            hoursEl.innerText = "7:00 AM - 6:00 PM";
+            if (isOpen) {
+                titleEl.innerText = "Station Open";
+                badgeEl.innerText = "Active";
+                badgeEl.className = "fw-bold text-success";
+                iconEl.innerHTML = '<i class="bi bi-droplet-half"></i>';
+            } else {
+                titleEl.innerText = "Station Closed";
+                badgeEl.innerText = "Offline";
+                badgeEl.className = "fw-bold text-danger";
+                iconEl.innerHTML = '<i class="bi bi-moon-stars"></i>';
+            }
+        }
+        updateStationStatusCard();
+
+        function syncSlotSelectionWithDate() {
+            const timeSlotSelect = document.getElementById('deliveryTimeSlot');
+            const asapOption = timeSlotSelect.querySelector('option[value^="ASAP"]');
+            const isToday = selectedDeliveryDate === getTodayDate();
+
+            if (!isToday) {
+                if (asapOption) asapOption.disabled = true;
+                if (timeSlotSelect.value.startsWith("ASAP")) {
+                    timeSlotSelect.value = "Morning (7:00 AM - 11:00 AM)";
+                }
+            } else {
+                if (asapOption) asapOption.disabled = !isStationOpen();
+                if (isStationOpen()) {
+                    timeSlotSelect.value = "ASAP (Within 1 Hour)";
+                } else {
+                    timeSlotSelect.value = "Morning (7:00 AM - 11:00 AM)";
+                }
+            }
+        }
+
+        function showAlert(msg) {
+            const box = document.getElementById('modalAlertBox');
+            const txt = document.getElementById('modalAlertText');
+            txt.innerText = msg;
+            box.classList.remove('d-none');
+        }
+
+        function hideAlert() { document.getElementById('modalAlertBox').classList.add('d-none'); }
+
+        function showSuccess(title, text, callback) {
+            document.getElementById('successTitle').innerText = title;
+            document.getElementById('successText').innerText = text;
+            successNextAction = callback;
+            showView('successMessageView', title);
+        }
+
+        document.getElementById('successOkBtn').addEventListener('click', () => {
+            if (typeof successNextAction === 'function') { successNextAction(); } else { modal.hide(); }
+        });
+
+        function showView(viewId, title) {
+            hideAlert();
+            ['signInView', 'signUpView', 'verifyEmailView', 'profileView', 'orderChoiceView', 'cartStoreView', 'orderFormView', 'ordersHistoryView', 'cancelConfirmView', 'editScheduleView', 'successMessageView'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('d-none');
+            });
+            const target = document.getElementById(viewId);
+            if (target) target.classList.remove('d-none');
+            document.getElementById('modalTitle').innerText = title;
+        }
+
+        window.switchCustomerTab = function(tabName, btn) {
+            currentCustomerTab = tabName;
+            document.querySelectorAll('.history-tab-btn').forEach(b => {
+                b.classList.remove('btn-info', 'active');
+                b.classList.add('text-light');
+            });
+            btn.classList.remove('text-light');
+            btn.classList.add('btn-info', 'active');
+            renderOrdersHistory();
+        };
+
+        window.reorderProduct = function(productName) {
+            modal.hide();
+            setTimeout(() => {
+                triggerOrderFlow();
+            }, 350);
+        };
+
+        function listenToUserOrders(user) {
+            if (firestoreUnsubscribe) firestoreUnsubscribe();
+
+            const q = query(collection(db, "orders"), where("userEmail", "==", user.email));
+            firestoreUnsubscribe = onSnapshot(q, (snapshot) => {
+                const cloudOrders = [];
+                snapshot.forEach(docSnap => {
+                    cloudOrders.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+
+                cloudOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                activeOrdersCache = cloudOrders;
+                localStorage.setItem('wellfind_orders', JSON.stringify(cloudOrders));
+                renderOrdersHistory();
+            }, (error) => {
+                console.error("Firestore sync error:", error);
+                activeOrdersCache = JSON.parse(localStorage.getItem('wellfind_orders') || '[]');
+                renderOrdersHistory();
+            });
+        }
+
+        // LOAD CLOUD USER PROFILE & LISTEN TO ORDERS
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        localStorage.setItem('wellfind_name', data.name || "");
+                        localStorage.setItem('wellfind_mobile', data.mobile || "");
+                        localStorage.setItem('wellfind_address', data.address || "");
+                    }
+                } catch (e) {
+                    console.error("Error loading user profile from cloud:", e);
+                }
+
+                updateProfileDisplay();
+                listenToUserOrders(user);
+            } else {
+                if (firestoreUnsubscribe) firestoreUnsubscribe();
+                document.getElementById('orderCountBadge').innerText = "0";
+            }
+        });
+
+        function updateProfileDisplay() {
+            document.getElementById('profileDisplayName').innerText = localStorage.getItem('wellfind_name') || "Customer";
+            document.getElementById('profileDisplayEmail').innerText = auth.currentUser ? auth.currentUser.email : "";
+            document.getElementById('profileDisplayMobile').innerText = localStorage.getItem('wellfind_mobile') || "09123456789";
+            document.getElementById('profileDisplayAddress').innerText = localStorage.getItem('wellfind_address') || "#48 J. Abad Santos Street, San Mateo";
+        }
+
+        document.getElementById('editProfileToggleBtn').addEventListener('click', () => {
+            const displayBox = document.getElementById('profileDisplayBox');
+            const editBox = document.getElementById('profileEditBox');
+            const btn = document.getElementById('editProfileToggleBtn');
+            if (editBox.classList.contains('d-none')) {
+                document.getElementById('editMobile').value = localStorage.getItem('wellfind_mobile') || "09123456789";
+                document.getElementById('editAddress').value = localStorage.getItem('wellfind_address') || "#48 J. Abad Santos Street, San Mateo";
+                displayBox.classList.add('d-none'); editBox.classList.remove('d-none'); btn.innerText = "Cancel Editing";
+            } else {
+                displayBox.classList.remove('d-none'); editBox.classList.add('d-none'); btn.innerText = "Edit Account Info";
+            }
+        });
+
+        // SAVE PROFILE TO FIRESTORE DIRECTLY
+        document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+            const newMobile = document.getElementById('editMobile').value.trim();
+            const newAddress = document.getElementById('editAddress').value.trim();
+            if (!newMobile || !newAddress) { showAlert("Please fill out mobile and address."); return; }
+
+            if (auth.currentUser) {
+                try {
+                    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+                        mobile: newMobile,
+                        address: newAddress
+                    });
+                } catch (err) {
+                    console.error("Profile cloud update failed:", err);
+                }
+            }
+
+            localStorage.setItem('wellfind_mobile', newMobile);
+            localStorage.setItem('wellfind_address', newAddress);
+            updateProfileDisplay();
+            document.getElementById('profileDisplayBox').classList.remove('d-none');
+            document.getElementById('profileEditBox').classList.add('d-none');
+            document.getElementById('editProfileToggleBtn').innerText = "Edit Account Info";
+            showSuccess("Profile Updated", "Your profile and delivery address are now saved in Cloud Firestore.");
+        });
+
+        document.getElementById('profileNavBtn').addEventListener('click', () => {
+            if (auth.currentUser) { showView('profileView', 'Account Dashboard'); } else { showView('signInView', 'Customer Sign In'); }
+            modal.show();
+        });
+
+        document.getElementById('ordersNavBtn').addEventListener('click', () => {
+            if (auth.currentUser) { renderOrdersHistory(); showView('ordersHistoryView', 'Delivery Orders'); } else { showView('signInView', 'Sign in to View Orders'); }
+            modal.show();
+        });
+
+        function triggerOrderFlow() {
+            updateStationStatusCard();
+            if (auth.currentUser) {
+                if (!auth.currentUser.emailVerified) { showView('verifyEmailView', 'Verify Your Email'); } else { showView('orderChoiceView', 'Select Order Type'); }
+            } else {
+                showView('signInView', 'Sign in to Order');
+            }
+            modal.show();
+        }
+
+        document.getElementById('orderNowNavBtn').addEventListener('click', triggerOrderFlow);
+        document.getElementById('heroOrderBtn').addEventListener('click', triggerOrderFlow);
+
+        document.getElementById('chooseRefill').addEventListener('click', () => {
+            document.getElementById('cartCatalogTitle').innerText = "Refill Options";
+            document.getElementById('productContainerGrid').innerHTML = `
+                <div class="col-md-6"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C1.png" alt="5 Gal Slim Refill" class="img-fluid rounded" style="height: 150px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C1.jpg';"><span class="badge bg-primary text-white position-absolute top-0 end-0 m-1 small">REFILL</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL SLIM REFILL</h6><div class="mb-2"><span class="fw-bold text-primary">₱35.00 / refill</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Slim Refill" data-price="35" data-img="/static/C1.png">Select Refill</button></div></div>
+                <div class="col-md-6"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C3.png" alt="5 Gal Round Refill" class="img-fluid rounded" style="height: 150px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C3.jpg';"><span class="badge bg-primary text-white position-absolute top-0 end-0 m-1 small">REFILL</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL ROUND REFILL</h6><div class="mb-2"><span class="fw-bold text-primary">₱35.00 / refill</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Round Refill" data-price="35" data-img="/static/C3.png">Select Refill</button></div></div>
+            `;
+            attachProductListeners();
+            showView('cartStoreView', 'Refill Catalog');
+        });
+
+        document.getElementById('chooseBuyWithContainer').addEventListener('click', () => {
+            document.getElementById('cartCatalogTitle').innerText = "Container & Package Options";
+            document.getElementById('productContainerGrid').innerHTML = `
+                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C1.png" alt="5 Gal Slim Container" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C1.jpg';"><span class="badge bg-dark text-white position-absolute top-0 end-0 m-1 small">PACKAGE</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL SLIM CONTAINER W/ WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱180.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Slim Container w/ Water" data-price="180" data-img="/static/C1.png">Select Item</button></div></div>
+                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C2.png" alt="Bottled Water Pack" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C2.jpg';"><span class="badge bg-success text-white position-absolute top-0 end-0 m-1 small">PACK</span></div><h6 class="fw-bold text-dark small mb-1">10X 350ML BOTTLED WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱90.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="10x 350ml Bottled Water" data-price="90" data-img="/static/C2.png">Select Item</button></div></div>
+                <div class="col-md-4"><div class="store-card p-3 h-100 d-flex flex-column text-center"><div class="position-relative mb-2"><img src="/static/C3.png" alt="5 Gal Round Container" class="img-fluid rounded" style="height: 140px; object-fit: contain; width: 100%;" onerror="this.onerror=null; this.src='/static/C3.jpg';"><span class="badge bg-dark text-white position-absolute top-0 end-0 m-1 small">PACKAGE</span></div><h6 class="fw-bold text-dark small mb-1">5 GAL ROUND CONTAINER W/ WATER</h6><div class="mb-2"><span class="fw-bold text-primary">₱180.00</span></div><button class="btn btn-dark w-100 rounded-pill py-1 mt-auto selectProductBtn" data-product="5 Gal Round Container w/ Water" data-price="180" data-img="/static/C3.png">Select Item</button></div></div>
+            `;
+            attachProductListeners();
+            showView('cartStoreView', 'Container Package Catalog');
+        });
+
+        function updateCostCalculation() {
+            const qty = parseInt(document.getElementById('orderContainers').value) || 1;
+            document.getElementById('totalCostDisplay').innerText = `₱${(qty * itemUnitPrice).toFixed(2)}`;
+        }
+
+        document.getElementById('orderContainers').addEventListener('input', updateCostCalculation);
+
+        function attachProductListeners() {
+            document.querySelectorAll('.selectProductBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const productName = e.target.getAttribute('data-product');
+                    itemUnitPrice = parseFloat(e.target.getAttribute('data-price')) || 35;
+                    currentProductImage = e.target.getAttribute('data-img');
+                    document.getElementById('orderItemTitle').innerText = productName;
+                    document.getElementById('orderProductLogo').src = currentProductImage;
+                    const userAddress = localStorage.getItem('wellfind_address') || "#48 J. Abad Santos Street, San Mateo";
+                    document.getElementById('displayOrderAddress').innerText = userAddress;
+                    document.getElementById('orderAddress').value = userAddress;
+                    document.getElementById('customAddressBox').classList.add('d-none');
+                    document.getElementById('toggleAddressEditBtn').innerText = "Change address";
+                    document.getElementById('orderContainers').value = 1;
+
+                    const restrictToday = !isStationOpen();
+                    const todayBtn = document.getElementById('todayBtn');
+                    const tomorrowBtn = document.getElementById('tomorrowBtn');
+                    const cutoffNotice = document.getElementById('cutoffNotice');
+                    document.querySelectorAll('.date-shortcut-btn').forEach(b => { b.classList.remove('btn-outline-info', 'active'); b.classList.add('btn-outline-light'); });
+                    document.getElementById('toggleCustomDateBtn').classList.remove('btn-outline-info', 'active');
+                    document.getElementById('toggleCustomDateBtn').classList.add('btn-outline-light');
+                    document.getElementById('deliveryDate').classList.add('d-none');
+
+                    if (restrictToday) {
+                        todayBtn.disabled = true; todayBtn.classList.add('opacity-50'); cutoffNotice.classList.remove('d-none');
+                        selectedDeliveryDate = getTomorrowDate();
+                        tomorrowBtn.classList.remove('btn-outline-light'); tomorrowBtn.classList.add('btn-outline-info', 'active');
+                    } else {
+                        todayBtn.disabled = false; todayBtn.classList.remove('opacity-50'); cutoffNotice.classList.add('d-none');
+                        selectedDeliveryDate = getTodayDate();
+                        todayBtn.classList.remove('btn-outline-light'); todayBtn.classList.add('btn-outline-info', 'active');
+                    }
+                    syncSlotSelectionWithDate();
+                    updateCostCalculation();
+                    showView('orderFormView', 'Request Water Delivery');
+                });
+            });
+        }
+
+        document.getElementById('toggleAddressEditBtn').addEventListener('click', () => {
+            const box = document.getElementById('customAddressBox');
+            const btn = document.getElementById('toggleAddressEditBtn');
+            if (box.classList.contains('d-none')) { box.classList.remove('d-none'); btn.innerText = "Use Registered Address"; }
+            else { box.classList.add('d-none'); document.getElementById('orderAddress').value = localStorage.getItem('wellfind_address') || "#48 J. Abad Santos Street, San Mateo"; btn.innerText = "Change address"; }
+        });
+
+        document.querySelectorAll('.date-shortcut-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (e.target.disabled) return;
+                document.querySelectorAll('.date-shortcut-btn').forEach(b => { b.classList.remove('btn-outline-info', 'active'); b.classList.add('btn-outline-light'); });
+                document.getElementById('toggleCustomDateBtn').classList.remove('btn-outline-info', 'active');
+                document.getElementById('toggleCustomDateBtn').classList.add('btn-outline-light');
+                document.getElementById('deliveryDate').classList.add('d-none');
+                e.target.classList.remove('btn-outline-light'); e.target.classList.add('btn-outline-info', 'active');
+                selectedDeliveryDate = (e.target.getAttribute('data-day') === 'today') ? getTodayDate() : getTomorrowDate();
+                syncSlotSelectionWithDate();
+            });
+        });
+
+        document.getElementById('toggleCustomDateBtn').addEventListener('click', () => {
+            document.querySelectorAll('.date-shortcut-btn').forEach(b => { b.classList.remove('btn-outline-info', 'active'); b.classList.add('btn-outline-light'); });
+            const customBtn = document.getElementById('toggleCustomDateBtn');
+            customBtn.classList.remove('btn-outline-light'); customBtn.classList.add('btn-outline-info', 'active');
+            const dateInput = document.getElementById('deliveryDate');
+            dateInput.classList.remove('d-none'); dateInput.value = selectedDeliveryDate;
+        });
+
+        document.getElementById('deliveryDate').addEventListener('input', (e) => { 
+            selectedDeliveryDate = e.target.value; 
+            syncSlotSelectionWithDate();
+        });
+
+        document.getElementById('backToChoicesBtn').addEventListener('click', () => { showView('orderChoiceView', 'Select Order Type'); });
+        document.getElementById('switchToSignUp').addEventListener('click', (e) => { e.preventDefault(); showView('signUpView', 'Create Account'); });
+        document.getElementById('switchToSignIn').addEventListener('click', (e) => { e.preventDefault(); showView('signInView', 'Customer Sign In'); });
+
+        document.getElementById('signInBtn').addEventListener('click', async () => {
+            const email = document.getElementById('signInEmail').value.trim();
+            const password = document.getElementById('signInPassword').value.trim();
+            if (!email || !password) { showAlert("Please enter both email and password."); return; }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                if (!auth.currentUser.emailVerified) { showView('verifyEmailView', 'Verify Your Email'); }
+                else { showView('orderChoiceView', 'Select Order Type'); }
+            } catch (error) { showAlert("Sign In Error: " + error.message); }
+        });
+
+        // REGISTRATION SAVES FULL PROFILE TO FIRESTORE
+        document.getElementById('signUpBtn').addEventListener('click', async () => {
+            const name = document.getElementById('signUpName').value.trim();
+            const mobile = document.getElementById('signUpMobile').value.trim();
+            const email = document.getElementById('signUpEmail').value.trim();
+            const password = document.getElementById('signUpPassword').value.trim();
+            const address = document.getElementById('signUpAddress').value.trim();
+            if (!name || !mobile || !email || !password || !address) { showAlert("Please fill out all fields."); return; }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                await setDoc(doc(db, "users", user.uid), {
+                    name: name,
+                    mobile: mobile,
+                    address: address,
+                    email: email,
+                    createdAt: Date.now()
+                });
+
+                await sendEmailVerification(user);
+                localStorage.setItem('wellfind_name', name);
+                localStorage.setItem('wellfind_mobile', mobile);
+                localStorage.setItem('wellfind_address', address);
+                document.getElementById('displayVerifyEmail').innerText = email;
+                showView('verifyEmailView', 'Verify Your Email');
+            } catch (error) { showAlert("Sign Up Error: " + error.message); }
+        });
+
+        document.getElementById('checkVerificationBtn').addEventListener('click', async () => {
+            if (!auth.currentUser) return;
+            await auth.currentUser.reload();
+            if (auth.currentUser.emailVerified) { showSuccess("Verified", "Email verified successfully!", () => showView('orderChoiceView', 'Select Order Type')); }
+            else { showAlert("Email not verified yet. Please check your inbox!"); }
+        });
+
+        // CUSTOMER LOGOUT - CLEARS ONLY CUSTOMER STORAGE (DOES NOT TOUCH ADMIN APP)
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await signOut(auth);
+            localStorage.removeItem('wellfind_name');
+            localStorage.removeItem('wellfind_mobile');
+            localStorage.removeItem('wellfind_address');
+            localStorage.removeItem('wellfind_orders');
+            showSuccess("Logged Out", "Logged out successfully.", () => modal.hide());
+        });
+
+        document.getElementById('proceedToOrderBtn').addEventListener('click', () => { showView('orderChoiceView', 'Select Order Type'); });
+        document.getElementById('cancelOrderBtn').addEventListener('click', () => { showView('cartStoreView', 'Select Item'); });
+
+        // ORDER PLACEMENT
+        document.getElementById('submitOrderBtn').addEventListener('click', async () => {
+            const submitBtn = document.getElementById('submitOrderBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Submitting to Cloud...";
+
+            const itemName = document.getElementById('orderItemTitle').innerText;
+            const qty = document.getElementById('orderContainers').value;
+            const total = document.getElementById('totalCostDisplay').innerText;
+            const finalAddress = document.getElementById('orderAddress').value;
+            const timeSlot = document.getElementById('deliveryTimeSlot').value;
+            
+            const newOrder = {
+                userId: auth.currentUser ? auth.currentUser.uid : "guest",
+                userEmail: auth.currentUser ? auth.currentUser.email : "guest@wellfind.com",
+                item: itemName,
+                quantity: qty,
+                total: total,
+                address: finalAddress,
+                schedule: `${selectedDeliveryDate} (${timeSlot})`,
+                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                status: 'Preparing',
+                createdAt: Date.now()
+            };
+
+            try {
+                await addDoc(collection(db, "orders"), newOrder);
+            } catch (error) {
+                console.error("Firestore sync error: ", error);
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Confirm & Submit Order";
+
+            showSuccess("Order Placed!", `Your order for ${qty}x ${itemName} has been placed.`, () => { 
+                currentCustomerTab = 'active';
+                showView('ordersHistoryView', 'Delivery Orders'); 
+            });
+        });
+
+        window.cancelOrder = function(orderId) { orderToCancelId = orderId; showView('cancelConfirmView', 'Cancel Order'); }
+
+        // CUSTOMER CANCELLATION UPDATES FIRESTORE STATUS
+        document.getElementById('confirmCancelYes').addEventListener('click', async () => {
+            if (orderToCancelId) {
+                const targetOrder = activeOrdersCache.find(ord => (ord.firestoreId === orderToCancelId || ord.id === orderToCancelId));
+
+                if (targetOrder && targetOrder.firestoreId) {
+                    try {
+                        await updateDoc(doc(db, "orders", targetOrder.firestoreId), { 
+                            status: "Canceled",
+                            canceledBy: "Customer",
+                            canceledAt: Date.now()
+                        });
+                    } catch (err) {
+                        console.error("Failed to cancel in Firestore:", err);
+                    }
+                }
+
+                orderToCancelId = null; 
+                showSuccess("Order Canceled", "Your order has been canceled. The station has been notified.", () => {
+                    currentCustomerTab = 'canceled';
+                    showView('ordersHistoryView', 'Delivery Orders');
+                });
+            }
+        });
+
+        document.getElementById('confirmCancelNo').addEventListener('click', () => { orderToCancelId = null; showView('ordersHistoryView', 'Delivery Orders'); });
+
+        window.editOrderSchedule = function(orderId) {
+            orderToEditId = orderId;
+            const ord = activeOrdersCache.find(o => (o.firestoreId === orderId || o.id === orderId));
+            if (ord) { document.getElementById('editNewDate').value = getTodayDate(); showView('editScheduleView', 'Edit Schedule'); }
+        };
+
+        document.getElementById('saveNewScheduleBtn').addEventListener('click', async () => {
+            const newDate = document.getElementById('editNewDate').value;
+            if (orderToEditId && newDate) {
+                const ord = activeOrdersCache.find(o => (o.firestoreId === orderToEditId || o.id === orderToEditId));
+                if (ord && ord.firestoreId) { 
+                    const updatedSchedule = `${newDate} (Updated)`;
+                    try {
+                        await updateDoc(doc(db, "orders", ord.firestoreId), { schedule: updatedSchedule });
+                    } catch (err) {
+                        console.error("Failed to update schedule in Firestore:", err);
+                    }
+                }
+                orderToEditId = null; 
+                showSuccess("Schedule Updated", "Order schedule updated successfully!", () => showView('ordersHistoryView', 'Delivery Orders'));
+            }
+        });
+
+        document.getElementById('cancelScheduleBtn').addEventListener('click', () => { orderToEditId = null; showView('ordersHistoryView', 'Delivery Orders'); });
+
+        window.dismissCanceledOrder = function(orderId) {
+            activeOrdersCache = activeOrdersCache.filter(o => (o.firestoreId !== orderId && o.id !== orderId));
+            localStorage.setItem('wellfind_orders', JSON.stringify(activeOrdersCache));
+            renderOrdersHistory();
+        };
+
+        // RENDER CUSTOMER 3-TIER HISTORY
+        function renderOrdersHistory() {
+            const orders = activeOrdersCache.length > 0 ? activeOrdersCache : JSON.parse(localStorage.getItem('wellfind_orders') || '[]');
+            const container = document.getElementById('ordersListContainer');
+
+            const activeList = orders.filter(o => {
+                const s = (o.status || '').toLowerCase();
+                return s !== 'delivered' && s !== 'canceled';
+            });
+            const deliveredList = orders.filter(o => (o.status || '').toLowerCase() === 'delivered');
+            const canceledList = orders.filter(o => (o.status || '').toLowerCase() === 'canceled');
+
+            document.getElementById('orderCountBadge').innerText = activeList.length;
+            document.getElementById('custCountActive').innerText = activeList.length;
+            document.getElementById('custCountDelivered').innerText = deliveredList.length;
+            document.getElementById('custCountCanceled').innerText = canceledList.length;
+
+            let targetList = activeList;
+            let emptyMsg = "No active deliveries in progress.";
+            if (currentCustomerTab === 'delivered') {
+                targetList = deliveredList;
+                emptyMsg = "No delivered orders yet.";
+            } else if (currentCustomerTab === 'canceled') {
+                targetList = canceledList;
+                emptyMsg = "No canceled orders.";
+            }
+
+            if (targetList.length === 0) { 
+                container.innerHTML = `<div class="p-4 rounded-3 bg-white bg-opacity-10 text-center text-light opacity-75 small">${emptyMsg}</div>`; 
+                return; 
+            }
+
+            let html = '';
+            targetList.forEach(ord => {
+                const orderKey = ord.firestoreId || ord.id;
+                const status = ord.status || 'Preparing';
+                const isCanceled = status.toLowerCase() === 'canceled';
+                const isDelivered = status.toLowerCase() === 'delivered';
+
+                let badgeClass = 'bg-warning text-dark';
+                let statusIcon = '<i class="bi bi-hourglass-split"></i>';
+                if (status === 'Out for Delivery' || status === 'Dispatching') {
+                    badgeClass = 'bg-info text-dark';
+                    statusIcon = '<i class="bi bi-truck"></i>';
+                } else if (isDelivered) {
+                    badgeClass = 'bg-success text-white';
+                    statusIcon = '<i class="bi bi-check-circle-fill"></i>';
+                } else if (isCanceled) {
+                    badgeClass = 'bg-danger text-white';
+                    statusIcon = '<i class="bi bi-x-circle"></i>';
+                }
+
+                html += `
+                    <div class="p-3 rounded-3 bg-white bg-opacity-10 mb-2 border ${isCanceled ? 'border-danger border-opacity-25' : (isDelivered ? 'border-success border-opacity-25' : 'border-light border-opacity-10')}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold text-white mb-0">${ord.quantity || 1}x ${ord.item || 'Pure Refill'}</h6>
+                                <small class="text-info">Total: ${ord.total || '₱0.00'} • Schedule: ${ord.schedule || 'N/A'}</small>
+                            </div>
+                            <span class="badge ${badgeClass} fw-bold">${statusIcon} ${status}</span>
+                        </div>
+                        <small class="text-light opacity-75 extra-small d-block mb-2">
+                            <i class="bi bi-geo-alt text-danger me-1"></i> Address: ${ord.address}
+                        </small>
+                `;
+
+                if (isDelivered) {
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light border-opacity-10">
+                            <span class="text-success extra-small"><i class="bi bi-shield-check me-1"></i> Fulfilled to doorstep</span>
+                            <button class="btn btn-sm btn-outline-info py-0 px-3 rounded-pill small" onclick="reorderProduct('${ord.item}')">
+                                <i class="bi bi-arrow-repeat me-1"></i> Order Again
+                            </button>
+                        </div>
+                    `;
+                } else if (isCanceled) {
+                    const noticeText = ord.canceledBy === 'Customer'
+                        ? "Canceled by you. The station recorded the void."
+                        : "Canceled by station due to operational capacity or cutoff.";
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light border-opacity-10">
+                            <span class="text-warning extra-small">${noticeText}</span>
+                            <button class="btn btn-sm btn-outline-light py-0 px-3 rounded-pill small" onclick="dismissCanceledOrder('${orderKey}')">Dismiss</button>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="d-flex justify-content-end align-items-center gap-2 pt-1 border-top border-light border-opacity-10">
+                            <button class="btn btn-sm btn-outline-info py-0 px-3 rounded-pill small" onclick="editOrderSchedule('${orderKey}')">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-3 rounded-pill small" onclick="cancelOrder('${orderKey}')">Cancel</button>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+        renderOrdersHistory();
+    </script>
+</body>
+</html>

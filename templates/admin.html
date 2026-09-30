@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wellfind Admin — Station Management Portal</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #050b14 0%, #0c2340 40%, #0284c7 100%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: rgba(5, 11, 20, 0.9)!important;
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+        .order-mobile-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .order-mobile-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+        .order-mobile-card.is-asap {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+        .btn-glow {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            border: none; color: #fff; font-weight: 600;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+        }
+        .table-dark th, .table-dark td {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
+        }
+        .action-btn-mobile {
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.45rem 0.5rem;
+            border-radius: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+        .action-btn-mobile:active { transform: scale(0.96); }
+        .filter-tab-btn {
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .badge-asap {
+            background: #ef4444;
+            color: #fff;
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .form-control { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; }
+        .form-control:focus { background: rgba(255, 255, 255, 0.12); color: #fff; border-color: #38bdf8; }
+        .form-control::placeholder { color: rgba(255, 255, 255, 0.4); }
+    </style>
+</head>
+<body>
+
+    <!-- Admin Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top py-2 py-md-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-white d-flex align-items-center gap-2 fs-6 fs-md-5" href="/">
+                <span class="text-info"><i class="bi bi-shield-lock-fill"></i></span> WELLFIND <span class="badge bg-info text-dark ms-1 small">ADMIN</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="small text-light opacity-75 d-none d-lg-inline" id="adminUserEmail">Authenticating...</span>
+                <a href="/" class="btn btn-outline-light btn-sm rounded-pill px-2 px-md-3 py-1 small">Store</a>
+                <button id="adminLogoutBtn" class="btn btn-outline-danger btn-sm rounded-pill px-2 px-md-3 py-1 small d-none">Exit</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container py-4 mt-5">
+        
+        <!-- ADMIN LOGIN CARD -->
+        <div id="adminLoginWrapper" class="row justify-content-center py-4 d-none">
+            <div class="col-md-5">
+                <div class="glass-card p-4 p-md-5 text-white">
+                    <div class="text-center mb-4">
+                        <span class="fs-1 text-info"><i class="bi bi-shield-lock-fill"></i></span>
+                        <h3 class="fw-bold mt-2">Admin Portal Login</h3>
+                        <p class="text-light opacity-75 small">Enter administrator credentials to manage station orders.</p>
+                    </div>
+                    <div id="adminLoginAlert" class="alert alert-danger bg-danger bg-opacity-25 text-danger border-danger border-opacity-25 small mb-3 d-none"></div>
+                    <div class="mb-3">
+                        <label class="form-label text-light opacity-75 fw-semibold small">Admin Email</label>
+                        <input type="email" id="adminLoginEmail" class="form-control" placeholder="danzlomtong10@gmail.com">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-light opacity-75 fw-semibold small">Password</label>
+                        <input type="password" id="adminLoginPassword" class="form-control" placeholder="••••••••">
+                    </div>
+                    <button id="adminLoginSubmitBtn" class="btn btn-glow w-100 py-3 rounded-pill fw-semibold">Sign In to Dashboard</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD CONTENT -->
+        <div id="adminDashboardContent" class="d-none">
+            <!-- Stats Row: 2x2 Grid on Mobile, 4-in-a-row on Desktop -->
+            <div class="row g-2 g-md-3 mb-3 mb-md-4">
+                <div class="col-6 col-md-3">
+                    <div class="glass-card p-3 p-md-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-light opacity-75 extra-small d-block">Active Dispatch</span>
+                                <h4 class="fw-bold text-white mb-0" id="statTotalOrders">0</h4>
+                            </div>
+                            <div class="fs-2 text-info opacity-75"><i class="bi bi-cart-check"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="glass-card p-3 p-md-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-light opacity-75 extra-small d-block">Pending Preparation</span>
+                                <h4 class="fw-bold text-warning mb-0" id="statPendingOrders">0</h4>
+                            </div>
+                            <div class="fs-2 text-warning opacity-75"><i class="bi bi-hourglass-split"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="glass-card p-3 p-md-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-light opacity-75 extra-small d-block">Today's Revenue</span>
+                                <h4 class="fw-bold text-success mb-0" id="statTodayRevenue">₱0.00</h4>
+                            </div>
+                            <div class="fs-2 text-success opacity-75"><i class="bi bi-cash-stack"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="glass-card p-3 p-md-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-light opacity-75 extra-small d-block">Est. Net Profit</span>
+                                <h4 class="fw-bold text-info mb-0" id="statTodayProfit">₱0.00</h4>
+                            </div>
+                            <div class="fs-2 text-info opacity-75"><i class="bi bi-graph-up-arrow"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Orders Management Section -->
+            <div class="glass-card p-3 p-md-4 mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <h5 class="fw-bold text-white mb-0" id="ordersQueueHeading">Delivery Dispatch Queue</h5>
+                        <p class="text-light opacity-75 small mb-0 d-none d-md-block">Real-time order routing, calendar date prioritization, and fulfillment tracking.</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="loadAdminOrders()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- Priority Dispatch Sort & Filter Tabs -->
+                <div class="d-flex flex-wrap gap-2 mb-3 pb-2 border-bottom border-light border-opacity-10">
+                    <button class="btn btn-sm btn-info rounded-pill px-3 filter-tab-btn active" data-filter="asap" onclick="setAdminFilter('asap', this)">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Earliest Date / Urgent
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="today" onclick="setAdminFilter('today', this)">
+                        <i class="bi bi-calendar2-check me-1"></i> Today Only
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="tomorrow" onclick="setAdminFilter('tomorrow', this)">
+                        <i class="bi bi-calendar-event me-1"></i> Scheduled Tomorrow / Future
+                    </button>
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="all" onclick="setAdminFilter('all', this)">
+                        All Active
+                    </button>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 filter-tab-btn" data-filter="delivered" onclick="setAdminFilter('delivered', this)">
+                        <i class="bi bi-check-circle-fill me-1"></i> Delivered (<span id="deliveredCountBadge">0</span>)
+                    </button>
+                </div>
+
+                <!-- Active Orders: Mobile View -->
+                <div class="d-block d-md-none" id="adminOrdersMobileList">
+                    <div class="text-center text-light opacity-75 py-4 small">Loading orders...</div>
+                </div>
+
+                <!-- Active Orders: Desktop View -->
+                <div class="d-none d-md-block table-responsive">
+                    <table class="table table-dark table-hover align-middle small mb-0 rounded-3">
+                        <thead>
+                            <tr>
+                                <th>Schedule Date / Slot</th>
+                                <th>Customer Details</th>
+                                <th>Item & Total</th>
+                                <th>Placed At</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersTableBody">
+                            <tr><td colspan="6" class="text-center text-light opacity-75 py-4">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Canceled / Voided Orders Section -->
+            <div class="glass-card p-3 p-md-4 mb-4 border-danger border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-danger text-white rounded-pill px-2 py-1"><i class="bi bi-x-circle me-1"></i> Voided</span>
+                        <h5 class="fw-bold text-white mb-0">Canceled Orders Archive</h5>
+                    </div>
+                    <span class="badge bg-light bg-opacity-10 text-light small px-3 py-1 rounded-pill" id="canceledOrdersCount">0 canceled</span>
+                </div>
+
+                <!-- Canceled Orders: Mobile View -->
+                <div class="d-block d-md-none" id="canceledOrdersMobileList">
+                    <div class="text-center text-light opacity-50 py-3 small">No canceled orders in record.</div>
+                </div>
+
+                <!-- Canceled Orders: Desktop View -->
+                <div class="d-none d-md-block table-responsive">
+                    <table class="table table-dark table-hover align-middle small mb-0 rounded-3 opacity-75">
+                        <thead>
+                            <tr>
+                                <th>Order ID / Date</th>
+                                <th>Customer Details</th>
+                                <th>Canceled Item</th>
+                                <th>Canceled By</th>
+                                <th>Amount</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="canceledOrdersTableBody">
+                            <tr><td colspan="6" class="text-center text-light opacity-50 py-3">No canceled orders in record.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- In-App Custom Action Confirmation Modal -->
+    <div class="modal fade" id="adminConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="glass-card modal-content border-light border-opacity-25 p-3 text-white text-center" style="background: rgba(12, 35, 64, 0.98); backdrop-filter: blur(20px);">
+                <div class="modal-body py-3">
+                    <div id="confirmModalIcon" class="fs-1 text-danger mb-2"><i class="bi bi-exclamation-triangle"></i></div>
+                    <h5 class="fw-bold text-white mb-2" id="confirmModalTitle">Are you sure?</h5>
+                    <p class="text-light opacity-75 small mb-4" id="confirmModalText">This will alter the order record.</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold" id="confirmModalActionBtn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Firebase SDK & Admin Script (Isolated Named Admin App) -->
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            signOut, 
+            setPersistence, 
+            browserSessionPersistence 
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBq-O2wMnfMWr9WyTSh_yyLtwutL7ff7TM",
+            authDomain: "wellfind-b7b5a.firebaseapp.com",
+            projectId: "wellfind-b7b5a",
+            storageBucket: "wellfind-b7b5a.firebasestorage.app",
+            messagingSenderId: "538142424703",
+            appId: "1:538142424703:web:415ccfcd82a71b4c53494a",
+            measurementId: "G-4GDMM90MH6"
+        };
+
+        // Create an isolated secondary App instance for Admin
+        const adminApp = getApps().some(a => a.name === "adminApp") 
+            ? getApp("adminApp") 
+            : initializeApp(firebaseConfig, "adminApp");
+
+        const auth = getAuth(adminApp);
+        const db = getFirestore(adminApp);
+
+        // Keep admin auth isolated to session storage
+        setPersistence(auth, browserSessionPersistence).catch(console.error);
+
+        const loginWrapper = document.getElementById('adminLoginWrapper');
+        const dashboardContent = document.getElementById('adminDashboardContent');
+        const loginAlert = document.getElementById('adminLoginAlert');
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        const allowedAdmins = ["admin@wellfind.com", "danzlomtong10@gmail.com"];
+
+        const confirmModalInstance = new bootstrap.Modal(document.getElementById('adminConfirmModal'));
+        let pendingActionCallback = null;
+        let currentFilter = 'asap';
+
+        window.setAdminFilter = function(filterMode, btn) {
+            currentFilter = filterMode;
+            document.querySelectorAll('.filter-tab-btn').forEach(b => {
+                b.classList.remove('btn-info', 'btn-success', 'active');
+                b.classList.add('btn-outline-light');
+            });
+
+            if (filterMode === 'delivered') {
+                btn.classList.remove('btn-outline-light');
+                btn.classList.add('btn-success', 'active');
+                document.getElementById('ordersQueueHeading').innerText = "Delivered Deliveries Archive";
+            } else {
+                btn.classList.remove('btn-outline-light');
+                btn.classList.add('btn-info', 'active');
+                document.getElementById('ordersQueueHeading').innerText = "Delivery Dispatch Queue";
+            }
+            loadAdminOrders();
+        };
+
+        function showStyledConfirm(title, text, confirmBtnText, callback) {
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalText').innerText = text;
+            const actionBtn = document.getElementById('confirmModalActionBtn');
+            actionBtn.innerText = confirmBtnText;
+            pendingActionCallback = callback;
+            confirmModalInstance.show();
+        }
+
+        document.getElementById('confirmModalActionBtn').addEventListener('click', async () => {
+            confirmModalInstance.hide();
+            if (typeof pendingActionCallback === 'function') {
+                await pendingActionCallback();
+            }
+        });
+
+        function calculateOrderProfit(item, quantity, totalAmount) {
+            const qty = parseInt(quantity) || 1;
+            const itemLower = (item || "").toLowerCase();
+
+            if (itemLower.includes("refill")) {
+                return qty * 27.00;
+            } else if (itemLower.includes("package") || itemLower.includes("container w/ water") || itemLower.includes("container")) {
+                return qty * 70.00;
+            } else if (itemLower.includes("bottled water") || itemLower.includes("350ml")) {
+                return qty * 45.00;
+            } else {
+                return totalAmount * 0.65;
+            }
+        }
+
+        function extractScheduleDate(sched) {
+            if (!sched) return "9999-99-99";
+            const match = sched.match(/\d{4}-\d{2}-\d{2}/);
+            return match ? match[0] : "9999-99-99";
+        }
+
+        function getTimeSlotWeight(sched) {
+            const s = (sched || '').toLowerCase();
+            if (s.includes('asap') || s.includes('1 hour') || s.includes('within 1')) return 1;
+            if (s.includes('morning') || s.includes('7:00 am')) return 2;
+            if (s.includes('midday') || s.includes('11:00 am')) return 3;
+            if (s.includes('afternoon') || s.includes('2:00 pm')) return 4;
+            if (s.includes('anytime')) return 5;
+            return 6;
+        }
+
+        function renderAdminDashboard(email) {
+            loginWrapper.classList.add('d-none');
+            dashboardContent.classList.remove('d-none');
+            document.getElementById('adminUserEmail').innerText = email;
+            logoutBtn.classList.remove('d-none');
+            loadAdminOrders();
+        }
+
+        function renderAdminLoggedOut() {
+            loginWrapper.classList.remove('d-none');
+            dashboardContent.classList.add('d-none');
+            document.getElementById('adminUserEmail').innerText = "Requires Admin Sign-In";
+            logoutBtn.classList.add('d-none');
+        }
+
+        document.getElementById('adminLoginSubmitBtn').addEventListener('click', async () => {
+            const email = document.getElementById('adminLoginEmail').value.trim();
+            const password = document.getElementById('adminLoginPassword').value.trim();
+
+            if (!email || !password) {
+                loginAlert.innerText = "Please enter admin email and password.";
+                loginAlert.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                const userCred = await signInWithEmailAndPassword(auth, email, password);
+                if (!allowedAdmins.includes(userCred.user.email)) {
+                    await signOut(auth);
+                    sessionStorage.removeItem('wellfind_admin_auth');
+                    loginAlert.innerText = "Access Denied: Not an authorized administrator account.";
+                    loginAlert.classList.remove('d-none');
+                } else {
+                    sessionStorage.setItem('wellfind_admin_auth', userCred.user.email);
+                    loginAlert.classList.add('d-none');
+                    renderAdminDashboard(userCred.user.email);
+                }
+            } catch (error) {
+                loginAlert.innerText = "Login Error: " + error.message;
+                loginAlert.classList.remove('d-none');
+            }
+        });
+
+        const savedAdmin = sessionStorage.getItem('wellfind_admin_auth');
+        if (savedAdmin && allowedAdmins.includes(savedAdmin)) {
+            renderAdminDashboard(savedAdmin);
+        } else {
+            renderAdminLoggedOut();
+        }
+
+        logoutBtn.addEventListener('click', async () => { 
+            sessionStorage.removeItem('wellfind_admin_auth');
+            await signOut(auth); 
+            renderAdminLoggedOut();
+        });
+
+        window.loadAdminOrders = async function() {
+            const tbody = document.getElementById('adminOrdersTableBody');
+            const mobileContainer = document.getElementById('adminOrdersMobileList');
+            const canceledTbody = document.getElementById('canceledOrdersTableBody');
+            const canceledMobile = document.getElementById('canceledOrdersMobileList');
+
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">Loading orders...</td></tr>`;
+            mobileContainer.innerHTML = `<div class="text-center text-light opacity-75 py-4 small">Loading orders...</div>`;
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "orders"));
+                const allOrders = [];
+                querySnapshot.forEach((docSnap) => {
+                    allOrders.push({ firebaseId: docSnap.id, ...docSnap.data() });
+                });
+
+                const canceledOrders = allOrders.filter(o => (o.status || '').toLowerCase() === 'canceled');
+                const deliveredOrders = allOrders.filter(o => (o.status || '').toLowerCase() === 'delivered');
+                const activeOrders = allOrders.filter(o => {
+                    const st = (o.status || '').toLowerCase();
+                    return st !== 'canceled' && st !== 'delivered';
+                });
+
+                document.getElementById('statTotalOrders').innerText = activeOrders.length;
+                document.getElementById('statPendingOrders').innerText = activeOrders.filter(o => {
+                    const st = (o.status || 'Preparing').toLowerCase();
+                    return st === 'pending' || st === 'preparing';
+                }).length;
+
+                let todayRevenue = 0;
+                let todayNetProfit = 0;
+                const todayStr = new Date().toLocaleDateString();
+                const todayIso = new Date().toISOString().split('T')[0];
+
+                [...activeOrders, ...deliveredOrders].forEach(ord => {
+                    const totalStr = ord.total || "0";
+                    const numericTotal = parseFloat(totalStr.replace(/[^0-9.]/g, '')) || 0;
+                    const isToday = ord.date ? ord.date.includes(todayStr) : true;
+                    if (isToday) {
+                        todayRevenue += numericTotal;
+                        todayNetProfit += calculateOrderProfit(ord.item, ord.quantity, numericTotal);
+                    }
+                });
+
+                document.getElementById('statTodayRevenue').innerText = `₱${todayRevenue.toFixed(2)}`;
+                document.getElementById('statTodayProfit').innerText = `₱${todayNetProfit.toFixed(2)}`;
+                document.getElementById('canceledOrdersCount').innerText = `${canceledOrders.length} canceled`;
+                document.getElementById('deliveredCountBadge').innerText = deliveredOrders.length;
+
+                let displayOrders = [];
+                if (currentFilter === 'delivered') {
+                    displayOrders = deliveredOrders;
+                } else {
+                    displayOrders = activeOrders.filter(ord => {
+                        const targetDate = extractScheduleDate(ord.schedule);
+                        if (currentFilter === 'today') {
+                            return targetDate === todayIso;
+                        }
+                        if (currentFilter === 'tomorrow') {
+                            return targetDate > todayIso;
+                        }
+                        return true;
+                    });
+                }
+
+                displayOrders.sort((a, b) => {
+                    const dateA = extractScheduleDate(a.schedule);
+                    const dateB = extractScheduleDate(b.schedule);
+
+                    if (dateA !== dateB) {
+                        return dateA.localeCompare(dateB);
+                    }
+
+                    const slotWeightA = getTimeSlotWeight(a.schedule);
+                    const slotWeightB = getTimeSlotWeight(b.schedule);
+
+                    if (slotWeightA !== slotWeightB) {
+                        return slotWeightA - slotWeightB;
+                    }
+
+                    return (a.createdAt || 0) - (b.createdAt || 0);
+                });
+
+                if (displayOrders.length === 0) {
+                    const emptyMsg = currentFilter === 'delivered' 
+                        ? `No delivered orders recorded yet.` 
+                        : `No active orders matching this filter.`;
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">${emptyMsg}</td></tr>`;
+                    mobileContainer.innerHTML = `<div class="text-center text-light opacity-75 py-4 small">${emptyMsg}</div>`;
+                } else {
+                    let desktopHtml = '';
+                    let mobileHtml = '';
+
+                    displayOrders.forEach(ord => {
+                        let status = ord.status || 'Preparing';
+                        if (status === 'Pending') status = 'Preparing';
+
+                        let badgeClass = 'bg-warning text-dark';
+                        let statusIcon = '<i class="bi bi-hourglass-split"></i>';
+
+                        if (status === 'Out for Delivery' || status === 'Dispatching') {
+                            badgeClass = 'bg-info text-dark';
+                            statusIcon = '<i class="bi bi-truck"></i>';
+                            status = 'Out for Delivery';
+                        } else if (status === 'Delivered') {
+                            badgeClass = 'bg-success text-white';
+                            statusIcon = '<i class="bi bi-check-circle-fill"></i>';
+                        }
+
+                        const shortId = ord.firebaseId.slice(-6);
+                        const itemDisplay = `${ord.quantity || 1}x ${ord.item || 'Pure Refill'}`;
+                        const addressDisplay = ord.address || 'San Mateo Delivery';
+                        const totalDisplay = ord.total || '₱35.00';
+                        const scheduleDisplay = ord.schedule || 'ASAP (Within 1 Hour)';
+                        const dateDisplay = ord.date || 'Recent';
+
+                        const orderSchedDate = extractScheduleDate(scheduleDisplay);
+                        const isOrderToday = orderSchedDate === todayIso;
+                        const isAsap = scheduleDisplay.toLowerCase().includes('asap') && isOrderToday;
+
+                        const urgencyPill = isAsap 
+                            ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
+                            : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`;
+
+                        desktopHtml += `
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-1 mb-1">
+                                        ${urgencyPill}
+                                        <strong class="text-white">#${shortId}</strong>
+                                    </div>
+                                    <span class="text-light fw-medium small">${scheduleDisplay}</span>
+                                </td>
+                                <td>
+                                    <span class="text-light">${addressDisplay}</span><br>
+                                    <span class="text-info extra-small">${ord.userEmail || ''}</span>
+                                </td>
+                                <td>
+                                    <strong class="text-info">${itemDisplay}</strong><br>
+                                    <span class="text-success fw-semibold extra-small">Total: ${totalDisplay}</span>
+                                </td>
+                                <td><span class="text-light opacity-50 extra-small">${dateDisplay}</span></td>
+                                <td><span class="badge ${badgeClass} fw-bold px-2 py-1">${statusIcon} ${status}</span></td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                        <button class="btn btn-sm btn-outline-warning ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')" title="Mark Preparing">
+                                            Preparing
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')" title="Mark Out for Delivery">
+                                            Dispatch
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')" title="Mark Delivered">
+                                            Done
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="archiveOrder('${ord.firebaseId}')" title="Cancel/Void Order">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+
+                        mobileHtml += `
+                            <div class="order-mobile-card ${isAsap ? 'is-asap' : ''}">
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light border-opacity-10">
+                                    <div class="d-flex align-items-center gap-1">
+                                        ${urgencyPill}
+                                        <span class="badge bg-light bg-opacity-10 text-white border border-light border-opacity-25 px-2 py-1">#${shortId}</span>
+                                        <small class="text-light opacity-50 ms-1" style="font-size: 0.72rem;">${dateDisplay}</small>
+                                    </div>
+                                    <span class="badge ${badgeClass} fw-bold px-2 py-1">
+                                        ${statusIcon} ${status}
+                                    </span>
+                                </div>
+
+                                <div class="mb-2">
+                                    <h6 class="fw-bold text-info mb-1">${itemDisplay}</h6>
+                                    <div class="small text-light opacity-90 mb-1">
+                                        <span><i class="bi bi-geo-alt text-danger me-1"></i> ${addressDisplay}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between small">
+                                        <span class="text-light opacity-75"><i class="bi bi-clock me-1"></i> ${scheduleDisplay}</span>
+                                        <strong class="text-success">${totalDisplay}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="row g-1 pt-1">
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-warning w-100 action-btn-mobile ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')">
+                                            <i class="bi bi-hourglass-split"></i> Preparing
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-info w-100 action-btn-mobile ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')">
+                                            <i class="bi bi-truck"></i> Dispatch
+                                        </button>
+                                    </div>
+                                    <div class="col-8">
+                                        <button class="btn btn-outline-success w-100 action-btn-mobile ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')">
+                                            <i class="bi bi-check-circle"></i> Mark Delivered
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="archiveOrder('${ord.firebaseId}')">
+                                            <i class="bi bi-x-circle"></i> Void
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    tbody.innerHTML = desktopHtml;
+                    mobileContainer.innerHTML = mobileHtml;
+                }
+
+                if (canceledOrders.length === 0) {
+                    canceledTbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-50 py-3">No canceled orders in record.</td></tr>`;
+                    canceledMobile.innerHTML = `<div class="text-center text-light opacity-50 py-3 small">No canceled orders in record.</div>`;
+                } else {
+                    let cancelDesktopHtml = '';
+                    let cancelMobileHtml = '';
+
+                    canceledOrders.forEach(ord => {
+                        const shortId = ord.firebaseId.slice(-6);
+                        const itemDisplay = `${ord.quantity || 1}x ${ord.item || 'Order'}`;
+                        const addressDisplay = ord.address || 'San Mateo';
+                        const totalDisplay = ord.total || '₱0.00';
+                        const dateDisplay = ord.date || 'Recent';
+                        const canceledSource = ord.canceledBy === 'Customer' ? 'By Customer' : 'By Station';
+
+                        cancelDesktopHtml += `
+                            <tr>
+                                <td>
+                                    <span class="text-light opacity-75">#${shortId}</span><br>
+                                    <span class="text-light opacity-50 extra-small">${dateDisplay}</span>
+                                </td>
+                                <td>
+                                    <span class="text-light opacity-75">${addressDisplay}</span><br>
+                                    <span class="text-info extra-small">${ord.userEmail || ''}</span>
+                                </td>
+                                <td><span class="text-light opacity-75 text-decoration-line-through">${itemDisplay}</span></td>
+                                <td><span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">${canceledSource}</span></td>
+                                <td><span class="text-light opacity-50">${totalDisplay}</span></td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="restoreOrder('${ord.firebaseId}')" title="Restore to Active">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="permanentDeleteOrder('${ord.firebaseId}')" title="Delete Permanently">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+
+                        cancelMobileHtml += `
+                            <div class="order-mobile-card border-danger border-opacity-25 mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge bg-danger bg-opacity-25 text-danger">#${shortId} • Canceled (${canceledSource})</span>
+                                    <small class="text-light opacity-50">${dateDisplay}</small>
+                                </div>
+                                <div class="small text-light opacity-75 mb-2">
+                                    <span class="text-decoration-line-through">${itemDisplay}</span> (${totalDisplay})<br>
+                                    <span class="extra-small">${addressDisplay}</span>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-secondary flex-fill action-btn-mobile" onclick="restoreOrder('${ord.firebaseId}')">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger flex-fill action-btn-mobile" onclick="permanentDeleteOrder('${ord.firebaseId}')">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    canceledTbody.innerHTML = cancelDesktopHtml;
+                    canceledMobile.innerHTML = cancelMobileHtml;
+                }
+
+            } catch (error) {
+                console.error("Error loading orders: ", error);
+                const errHtml = `<div class="text-center text-danger py-4">Failed to load cloud orders.</div>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load cloud orders.</td></tr>`;
+                mobileContainer.innerHTML = errHtml;
+            }
+        };
+
+        window.changeStatus = async function(firebaseId, status) {
+            try {
+                const orderRef = doc(db, "orders", firebaseId);
+                await updateDoc(orderRef, { status: status });
+                loadAdminOrders();
+            } catch (error) {
+                console.error("Status update error:", error);
+            }
+        };
+
+        window.archiveOrder = function(firebaseId) {
+            showStyledConfirm(
+                "Void Order?",
+                "This will move the order to the Canceled Orders Archive, notify the customer, and exclude it from revenue.",
+                "Yes, Void Order",
+                async () => {
+                    try {
+                        const orderRef = doc(db, "orders", firebaseId);
+                        await updateDoc(orderRef, { 
+                            status: "Canceled",
+                            canceledBy: "Station",
+                            canceledAt: Date.now()
+                        });
+                        loadAdminOrders();
+                    } catch (error) {
+                        console.error("Archive error:", error);
+                    }
+                }
+            );
+        };
+
+        window.restoreOrder = async function(firebaseId) {
+            try {
+                const orderRef = doc(db, "orders", firebaseId);
+                await updateDoc(orderRef, { status: "Preparing" });
+                loadAdminOrders();
+            } catch (error) {
+                console.error("Restore error:", error);
+            }
+        };
+
+        window.permanentDeleteOrder = function(firebaseId) {
+            showStyledConfirm(
+                "Permanent Delete?",
+                "Are you sure you want to completely erase this order record from the cloud?",
+                "Delete Forever",
+                async () => {
+                    try {
+                        await deleteDoc(doc(db, "orders", firebaseId));
+                        loadAdminOrders();
+                    } catch (error) {
+                        console.error("Delete error:", error);
+                    }
+                }
+            );
+        };
+    </script>
+</body>
+</html>

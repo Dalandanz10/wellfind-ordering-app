@@ -1,0 +1,4 @@
+DB API KEY.txt
+__pycache__/
+*.pyc
+.env
