@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template, send_from_directory
 
-# Get the base directory (one level up from api/)
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 app = Flask(
@@ -19,7 +18,6 @@ def home():
 def admin():
     return render_template("admin.html")
 
-# Explicit static file route
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     return send_from_directory(os.path.join(base_dir, 'static'), filename)
