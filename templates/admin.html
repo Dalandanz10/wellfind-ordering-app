@@ -117,6 +117,29 @@
             transition: all 0.2s ease;
         }
 
+        /* Mobile Segmented Dropdown Selector */
+        .mobile-filter-select {
+            background: rgba(12, 35, 64, 0.95);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #ffffff;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 0.55rem 0.85rem;
+            border-radius: 0.75rem;
+        }
+
+        .mobile-filter-select:focus {
+            background: rgba(12, 35, 64, 1);
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+            color: #ffffff;
+        }
+
+        .mobile-filter-select option {
+            background-color: #0c2340;
+            color: #ffffff;
+        }
+
         .badge-asap {
             background: #ef4444;
             color: #fff;
@@ -250,9 +273,9 @@
 
             <!-- Active Orders Management Section -->
             <div class="glass-card p-3 p-md-4 mb-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h5 class="fw-bold text-white mb-0" id="ordersQueueHeading">Delivery Dispatch Queue</h5>
+                        <h5 class="fw-bold text-white mb-0" id="ordersQueueHeading">Dispatch Queue</h5>
                         <p class="text-light opacity-75 small mb-0 d-none d-md-block">Real-time order routing, calendar date prioritization, and fulfillment tracking.</p>
                     </div>
                     <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="loadAdminOrders()">
@@ -260,8 +283,22 @@
                     </button>
                 </div>
 
-                <!-- Priority Dispatch Sort & Filter Tabs -->
-                <div class="d-flex flex-wrap gap-2 mb-3 pb-2 border-bottom border-light border-opacity-10">
+                <!-- Option 2: Mobile Compact Dropdown Selector (Visible only on mobile) -->
+                <div class="d-block d-md-none mb-3">
+                    <label class="form-label text-light opacity-75 small fw-semibold mb-1">
+                        <i class="bi bi-funnel me-1 text-info"></i> Queue View Filter:
+                    </label>
+                    <select id="mobileFilterSelect" class="form-select mobile-filter-select" onchange="setAdminFilter(this.value, null)">
+                        <option value="asap">⚡ Earliest Date / Urgent</option>
+                        <option value="today">📅 Today Only</option>
+                        <option value="tomorrow">🗓️ Scheduled Tomorrow / Future</option>
+                        <option value="all">📋 All Active Orders</option>
+                        <option value="delivered">✅ Delivered Archive (<span id="mobileDeliveredCount">0</span>)</option>
+                    </select>
+                </div>
+
+                <!-- Desktop Filter Tab Pills (Visible only on Desktop/Tablet) -->
+                <div class="d-none d-md-flex flex-wrap gap-2 mb-3 pb-2 border-bottom border-light border-opacity-10">
                     <button class="btn btn-sm btn-info rounded-pill px-3 filter-tab-btn active" data-filter="asap" onclick="setAdminFilter('asap', this)">
                         <i class="bi bi-lightning-charge-fill me-1"></i> Earliest Date / Urgent
                     </button>
@@ -406,20 +443,34 @@
 
         window.setAdminFilter = function(filterMode, btn) {
             currentFilter = filterMode;
+
+            // Sync Mobile Select Dropdown value
+            const mobileSelect = document.getElementById('mobileFilterSelect');
+            if (mobileSelect) mobileSelect.value = filterMode;
+
+            // Sync Desktop Button Pills
             document.querySelectorAll('.filter-tab-btn').forEach(b => {
                 b.classList.remove('btn-info', 'btn-success', 'active');
                 b.classList.add('btn-outline-light');
             });
 
-            if (filterMode === 'delivered') {
-                btn.classList.remove('btn-outline-light');
-                btn.classList.add('btn-success', 'active');
-                document.getElementById('ordersQueueHeading').innerText = "Delivered Deliveries Archive";
-            } else {
-                btn.classList.remove('btn-outline-light');
-                btn.classList.add('btn-info', 'active');
-                document.getElementById('ordersQueueHeading').innerText = "Delivery Dispatch Queue";
+            const activeBtn = btn || document.querySelector(`.filter-tab-btn[data-filter="${filterMode}"]`);
+            if (activeBtn) {
+                if (filterMode === 'delivered') {
+                    activeBtn.classList.remove('btn-outline-light');
+                    activeBtn.classList.add('btn-success', 'active');
+                } else {
+                    activeBtn.classList.remove('btn-outline-light');
+                    activeBtn.classList.add('btn-info', 'active');
+                }
             }
+
+            if (filterMode === 'delivered') {
+                document.getElementById('ordersQueueHeading').innerText = "Delivered Orders Archive";
+            } else {
+                document.getElementById('ordersQueueHeading').innerText = "Dispatch Queue";
+            }
+
             loadAdminOrders();
         };
 
@@ -574,6 +625,9 @@
                 document.getElementById('statTodayProfit').innerText = `₱${todayNetProfit.toFixed(2)}`;
                 document.getElementById('canceledOrdersCount').innerText = `${canceledOrders.length} canceled`;
                 document.getElementById('deliveredCountBadge').innerText = deliveredOrders.length;
+
+                const mobileDelivBadge = document.getElementById('mobileDeliveredCount');
+                if (mobileDelivBadge) mobileDelivBadge.innerText = deliveredOrders.length;
 
                 let displayOrders = [];
                 if (currentFilter === 'delivered') {
