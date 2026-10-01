@@ -79,7 +79,6 @@
             color: #f8fafc !important;
         }
 
-        /* Clean, Responsive Action Buttons */
         .action-btn-mobile {
             font-size: 0.76rem;
             font-weight: 600;
@@ -117,7 +116,6 @@
             transition: all 0.2s ease;
         }
 
-        /* Mobile Segmented Dropdown Selector */
         .mobile-filter-select {
             background: rgba(12, 35, 64, 0.95);
             border: 1px solid rgba(56, 189, 248, 0.35);
@@ -169,7 +167,6 @@
             color: rgba(255, 255, 255, 0.45);
         }
 
-        /* Clean up Mobile autofill background discoloration */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus {
@@ -276,52 +273,52 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h5 class="fw-bold text-white mb-0" id="ordersQueueHeading">Dispatch Queue</h5>
-                        <p class="text-light opacity-75 small mb-0 d-none d-md-block">Real-time order routing, calendar date prioritization, and fulfillment tracking.</p>
+                        <p class="text-light opacity-75 small mb-0 d-none d-md-block" id="ordersQueueSub">Real-time order routing, calendar date prioritization, and fulfillment tracking.</p>
                     </div>
-                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="triggerManualReload()">
+                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="processAndRenderOrders()">
                         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
                 </div>
 
-                <!-- Mobile Compact Dropdown Selector -->
+                <!-- Option 2: Mobile Compact Dropdown Selector -->
                 <div class="d-block d-md-none mb-3">
                     <label class="form-label text-light opacity-75 small fw-semibold mb-1">
                         <i class="bi bi-funnel me-1 text-info"></i> Queue View Filter:
                     </label>
-                    <select id="mobileFilterSelect" class="form-select mobile-filter-select" onchange="setAdminFilter(this.value, null)">
+                    <select id="mobileFilterSelect" class="form-select mobile-filter-select" onchange="setAdminFilter(this.value)">
                         <option value="asap">⚡ Earliest Date / Urgent</option>
                         <option value="today">📅 Today Only</option>
                         <option value="tomorrow">🗓️ Scheduled Tomorrow / Future</option>
                         <option value="all">📋 All Active Orders</option>
-                        <option value="delivered">✅ Delivered Archive (<span id="mobileDeliveredCount">0</span>)</option>
+                        <option value="delivered">✅ Delivered Archive</option>
                     </select>
                 </div>
 
                 <!-- Desktop Filter Tab Pills -->
                 <div class="d-none d-md-flex flex-wrap gap-2 mb-3 pb-2 border-bottom border-light border-opacity-10">
-                    <button class="btn btn-sm btn-info rounded-pill px-3 filter-tab-btn active" data-filter="asap" onclick="setAdminFilter('asap', this)">
+                    <button class="btn btn-sm btn-info rounded-pill px-3 filter-tab-btn active" data-filter="asap" onclick="setAdminFilter('asap')">
                         <i class="bi bi-lightning-charge-fill me-1"></i> Earliest Date / Urgent
                     </button>
-                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="today" onclick="setAdminFilter('today', this)">
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="today" onclick="setAdminFilter('today')">
                         <i class="bi bi-calendar2-check me-1"></i> Today Only
                     </button>
-                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="tomorrow" onclick="setAdminFilter('tomorrow', this)">
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="tomorrow" onclick="setAdminFilter('tomorrow')">
                         <i class="bi bi-calendar-event me-1"></i> Scheduled Tomorrow / Future
                     </button>
-                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="all" onclick="setAdminFilter('all', this)">
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3 filter-tab-btn" data-filter="all" onclick="setAdminFilter('all')">
                         All Active
                     </button>
-                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 filter-tab-btn" data-filter="delivered" onclick="setAdminFilter('delivered', this)">
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 filter-tab-btn" data-filter="delivered" onclick="setAdminFilter('delivered')">
                         <i class="bi bi-check-circle-fill me-1"></i> Delivered (<span id="deliveredCountBadge">0</span>)
                     </button>
                 </div>
 
-                <!-- Active Orders: Mobile View -->
+                <!-- Orders List: Mobile View -->
                 <div class="d-block d-md-none" id="adminOrdersMobileList">
                     <div class="text-center text-light opacity-75 py-4 small">Loading orders...</div>
                 </div>
 
-                <!-- Active Orders: Desktop View -->
+                <!-- Orders List: Desktop View -->
                 <div class="d-none d-md-block table-responsive">
                     <table class="table table-dark table-hover align-middle small mb-0 rounded-3">
                         <thead>
@@ -380,7 +377,7 @@
 
     </main>
 
-    <!-- In-App Custom Action Confirmation Modal -->
+    <!-- Confirmation Modal -->
     <div class="modal fade" id="adminConfirmModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="glass-card modal-content border-light border-opacity-25 p-3 text-white text-center" style="background: rgba(12, 35, 64, 0.98); backdrop-filter: blur(20px);">
@@ -437,7 +434,7 @@
         let unsubscribeOrdersListener = null;
         let rawOrdersCache = [];
 
-        window.setAdminFilter = function(filterMode, btn) {
+        window.setAdminFilter = function(filterMode) {
             currentFilter = (filterMode || 'asap').toLowerCase();
 
             const mobileSelect = document.getElementById('mobileFilterSelect');
@@ -448,7 +445,7 @@
                 b.classList.add('btn-outline-light');
             });
 
-            const activeBtn = btn || document.querySelector(`.filter-tab-btn[data-filter="${currentFilter}"]`);
+            const activeBtn = document.querySelector(`.filter-tab-btn[data-filter="${currentFilter}"]`);
             if (activeBtn) {
                 activeBtn.classList.remove('btn-outline-light');
                 if (currentFilter === 'delivered') {
@@ -458,16 +455,16 @@
                 }
             }
 
+            const heading = document.getElementById('ordersQueueHeading');
+            const sub = document.getElementById('ordersQueueSub');
             if (currentFilter === 'delivered') {
-                document.getElementById('ordersQueueHeading').innerText = "Delivered Orders Archive";
+                heading.innerText = "Delivered Orders Archive";
+                if (sub) sub.innerText = "Completed orders successfully delivered to customers.";
             } else {
-                document.getElementById('ordersQueueHeading').innerText = "Dispatch Queue";
+                heading.innerText = "Dispatch Queue";
+                if (sub) sub.innerText = "Real-time order routing, calendar date prioritization, and fulfillment tracking.";
             }
 
-            processAndRenderOrders();
-        };
-
-        window.triggerManualReload = function() {
             processAndRenderOrders();
         };
 
@@ -597,14 +594,13 @@
                     <div class="alert alert-danger bg-danger bg-opacity-25 border-danger border-opacity-50 text-white p-3 text-center my-3">
                         <i class="bi bi-shield-x fs-3 d-block mb-1"></i>
                         <strong>Database Access Error:</strong> ${error.message}
-                        <div class="extra-small opacity-75 mt-1">Make sure you are signed in with an authorized admin email and Firestore rules allow read/write.</div>
                     </div>`;
                 tbody.innerHTML = `<tr><td colspan="6">${errAlert}</td></tr>`;
                 mobileContainer.innerHTML = errAlert;
             });
         }
 
-       function processAndRenderOrders() {
+        window.processAndRenderOrders = function() {
             const tbody = document.getElementById('adminOrdersTableBody');
             const mobileContainer = document.getElementById('adminOrdersMobileList');
             const canceledTbody = document.getElementById('canceledOrdersTableBody');
@@ -643,38 +639,34 @@
             document.getElementById('canceledOrdersCount').innerText = `${canceledOrders.length} canceled`;
             document.getElementById('deliveredCountBadge').innerText = deliveredOrders.length;
 
-            const mobileDelivBadge = document.getElementById('mobileDeliveredCount');
-            if (mobileDelivBadge) mobileDelivBadge.innerText = deliveredOrders.length;
-
             let displayOrders = [];
-            const activeFilter = (currentFilter || 'asap').toLowerCase();
+            const isDeliveredView = currentFilter === 'delivered';
 
-            if (activeFilter === 'delivered') {
-                displayOrders = deliveredOrders;
-            } else if (activeFilter === 'today') {
+            if (isDeliveredView) {
+                displayOrders = [...deliveredOrders];
+            } else if (currentFilter === 'today') {
                 displayOrders = activeOrders.filter(ord => extractScheduleDate(ord.schedule) === todayIso);
-            } else if (activeFilter === 'tomorrow') {
+            } else if (currentFilter === 'tomorrow') {
                 displayOrders = activeOrders.filter(ord => extractScheduleDate(ord.schedule) > todayIso);
             } else {
-                displayOrders = activeOrders;
+                displayOrders = [...activeOrders];
             }
 
             displayOrders.sort((a, b) => {
+                if (isDeliveredView) {
+                    return (b.createdAt || 0) - (a.createdAt || 0);
+                }
                 const dateA = extractScheduleDate(a.schedule);
                 const dateB = extractScheduleDate(b.schedule);
-
                 if (dateA !== dateB) return dateA.localeCompare(dateB);
-
                 const slotWeightA = getTimeSlotWeight(a.schedule);
                 const slotWeightB = getTimeSlotWeight(b.schedule);
-
                 if (slotWeightA !== slotWeightB) return slotWeightA - slotWeightB;
-
-                return (b.createdAt || 0) - (a.createdAt || 0);
+                return (a.createdAt || 0) - (b.createdAt || 0);
             });
 
             if (displayOrders.length === 0) {
-                const emptyMsg = currentFilter === 'delivered' 
+                const emptyMsg = isDeliveredView 
                     ? `No delivered orders recorded yet.` 
                     : `No active orders matching this filter.`;
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">${emptyMsg}</td></tr>`;
@@ -685,7 +677,7 @@
 
                 displayOrders.forEach(ord => {
                     let status = ord.status || 'Preparing';
-                    if (status === 'Pending') status = 'Preparing';
+                    const isDeliveredItem = status.trim().toLowerCase() === 'delivered';
 
                     let badgeClass = 'bg-warning text-dark';
                     let statusIcon = '<i class="bi bi-hourglass-split"></i>';
@@ -694,9 +686,10 @@
                         badgeClass = 'bg-info text-dark';
                         statusIcon = '<i class="bi bi-truck"></i>';
                         status = 'Out for Delivery';
-                    } else if (status === 'Delivered') {
+                    } else if (isDeliveredItem) {
                         badgeClass = 'bg-success text-white';
                         statusIcon = '<i class="bi bi-check-circle-fill"></i>';
+                        status = 'Delivered';
                     }
 
                     const shortId = ord.firebaseId.slice(-6);
@@ -713,6 +706,63 @@
                     const urgencyPill = isAsap 
                         ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
                         : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`;
+
+                    let actionsHtmlDesktop = '';
+                    let actionsHtmlMobile = '';
+
+                    if (isDeliveredItem) {
+                        actionsHtmlDesktop = `
+                            <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="changeStatus('${ord.firebaseId}', 'Preparing')" title="Re-open order">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Re-open
+                            </button>
+                        `;
+                        actionsHtmlMobile = `
+                            <button class="btn btn-outline-info w-100 action-btn-mobile" onclick="changeStatus('${ord.firebaseId}', 'Preparing')">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Re-open Order
+                            </button>
+                        `;
+                    } else {
+                        actionsHtmlDesktop = `
+                            <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                <button class="btn btn-sm btn-outline-warning ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')" title="Mark Preparing">
+                                    Preparing
+                                </button>
+                                <button class="btn btn-sm btn-outline-info ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')" title="Mark Out for Delivery">
+                                    Dispatch
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="changeStatus('${ord.firebaseId}', 'Delivered')" title="Mark Delivered">
+                                    Done
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="archiveOrder('${ord.firebaseId}')" title="Cancel/Void Order">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                        `;
+                        actionsHtmlMobile = `
+                            <div class="row g-2 pt-2 border-top border-light border-opacity-10">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-warning w-100 action-btn-mobile ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')">
+                                        <i class="bi bi-hourglass-split"></i> Preparing
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-info w-100 action-btn-mobile ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')">
+                                        <i class="bi bi-truck"></i> Dispatch
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success w-100 action-btn-mobile" onclick="changeStatus('${ord.firebaseId}', 'Delivered')">
+                                        <i class="bi bi-check-circle"></i> Delivered
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="archiveOrder('${ord.firebaseId}')">
+                                        <i class="bi bi-x-circle"></i> Void
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     desktopHtml += `
                         <tr>
@@ -733,22 +783,7 @@
                             </td>
                             <td><span class="text-light opacity-50 extra-small">${dateDisplay}</span></td>
                             <td><span class="badge ${badgeClass} fw-bold px-2 py-1">${statusIcon} ${status}</span></td>
-                            <td class="text-end">
-                                <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
-                                    <button class="btn btn-sm btn-outline-warning ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')" title="Mark Preparing">
-                                        Preparing
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-info ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')" title="Mark Out for Delivery">
-                                        Dispatch
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')" title="Mark Delivered">
-                                        Done
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="archiveOrder('${ord.firebaseId}')" title="Cancel/Void Order">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                </div>
-                            </td>
+                            <td class="text-end">${actionsHtmlDesktop}</td>
                         </tr>
                     `;
 
@@ -776,29 +811,7 @@
                                 </div>
                             </div>
 
-                            <!-- Balanced 2x2 Grid for Mobile Action Buttons -->
-                            <div class="row g-2 pt-2 border-top border-light border-opacity-10">
-                                <div class="col-6">
-                                    <button class="btn btn-outline-warning w-100 action-btn-mobile ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')">
-                                        <i class="bi bi-hourglass-split"></i> Preparing
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button class="btn btn-outline-info w-100 action-btn-mobile ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')">
-                                        <i class="bi bi-truck"></i> Dispatch
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button class="btn btn-outline-success w-100 action-btn-mobile ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')">
-                                        <i class="bi bi-check-circle"></i> Delivered
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="archiveOrder('${ord.firebaseId}')">
-                                        <i class="bi bi-x-circle"></i> Void
-                                    </button>
-                                </div>
-                            </div>
+                            ${actionsHtmlMobile}
                         </div>
                     `;
                 });
@@ -877,7 +890,7 @@
                 canceledTbody.innerHTML = cancelDesktopHtml;
                 canceledMobile.innerHTML = cancelMobileHtml;
             }
-        }
+        };
 
         window.changeStatus = async function(firebaseId, status) {
             try {
