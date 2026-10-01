@@ -703,9 +703,12 @@
                     const isOrderToday = orderSchedDate === todayIso;
                     const isAsap = scheduleDisplay.toLowerCase().includes('asap') && isOrderToday;
 
-                    const urgencyPill = isAsap 
-                        ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
-                        : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`;
+                    // Don't show urgent blinking ASAP tags on already delivered archive orders
+                    const urgencyPill = isDeliveredItem
+                    ? `<span class="badge bg-success bg-opacity-25 text-success rounded-pill px-2 py-1"><i class="bi bi-check2-all me-1"></i>Fulfilled</span>`
+                    : (isAsap 
+                    ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
+                    : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`);
 
                     let actionsHtmlDesktop = '';
                     let actionsHtmlMobile = '';
@@ -765,13 +768,13 @@
                     }
 
                     desktopHtml += `
-                        <tr>
+                        <tr class="${isDeliveredItem ? 'opacity-75' : ''}">
                             <td>
                                 <div class="d-flex align-items-center gap-1 mb-1">
                                     ${urgencyPill}
                                     <strong class="text-white">#${shortId}</strong>
                                 </div>
-                                <span class="text-light fw-medium small">${scheduleDisplay}</span>
+                                <span class="${isDeliveredItem ? 'text-light opacity-50' : 'text-light fw-medium'} small">${scheduleDisplay}</span>
                             </td>
                             <td>
                                 <span class="text-light">${addressDisplay}</span><br>
