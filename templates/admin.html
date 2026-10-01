@@ -313,6 +313,23 @@
                     </button>
                 </div>
 
+                <!-- Retention Window Control (Visible strictly in Delivered Archive) -->
+                <div id="deliveredRetentionControl" class="d-none align-items-center gap-2 mb-3 p-2 rounded-3 bg-white bg-opacity-10 border border-light border-opacity-10">
+                    <small class="text-light opacity-75 fw-semibold d-flex align-items-center gap-1">
+                        <i class="bi bi-clock-history text-info"></i> Auto-Hide Delivered Older Than:
+                    </small>
+                    <select id="retentionPeriodSelect" class="form-select form-select-sm w-auto bg-dark text-white border-secondary rounded-pill py-0 px-3" onchange="changeDeliveredRetention(this.value)">
+                        <option value="1">24 Hours (1 Day)</option>
+                        <option value="3">3 Days</option>
+                        <option value="7">7 Days</option>
+                        <option value="30">30 Days</option>
+                        <option value="all">Keep All (Never Hide)</option>
+                    </select>
+                    <small class="text-light opacity-50 ms-auto extra-small d-none d-md-inline">
+                        <i class="bi bi-cloud-check me-1"></i> Preserved in Cloud Firestore
+                    </small>
+                </div>
+
                 <!-- Orders List: Mobile View -->
                 <div class="d-block d-md-none" id="adminOrdersMobileList">
                     <div class="text-center text-light opacity-75 py-4 small">Loading orders...</div>
@@ -434,6 +451,15 @@
         let unsubscribeOrdersListener = null;
         let rawOrdersCache = [];
 
+        // Configurable retention window for delivered orders (persisted in localStorage)
+        let deliveredRetentionDays = localStorage.getItem('wellfind_delivered_retention') || '7';
+
+        window.changeDeliveredRetention = function(val) {
+            deliveredRetentionDays = val;
+            localStorage.setItem('wellfind_delivered_retention', val);
+            processAndRenderOrders();
+        };
+
         window.setAdminFilter = function(filterMode) {
             currentFilter = (filterMode || 'asap').toLowerCase();
 
@@ -520,6 +546,10 @@
             dashboardContent.classList.remove('d-none');
             document.getElementById('adminUserEmail').innerText = email;
             logoutBtn.classList.remove('d-none');
+            
+            const retentionSelect = document.getElementById('retentionPeriodSelect');
+            if (retentionSelect) retentionSelect.value = deliveredRetentionDays;
+
             listenToAdminOrdersLive();
         }
 
@@ -605,13 +635,35 @@
             const mobileContainer = document.getElementById('adminOrdersMobileList');
             const canceledTbody = document.getElementById('canceledOrdersTableBody');
             const canceledMobile = document.getElementById('canceledOrdersMobileList');
+            const retentionControl = document.getElementById('deliveredRetentionControl');
+
+            const isDeliveredView = currentFilter === 'delivered';
+
+            // Show retention dropdown control only when inspecting Delivered Archive
+            if (retentionControl) {
+                if (isDeliveredView) {
+                    retentionControl.classList.remove('d-none');
+                    retentionControl.classList.add('d-flex');
+                } else {
+                    retentionControl.classList.remove('d-flex');
+                    retentionControl.classList.add('d-none');
+                }
+            }
 
             const canceledOrders = rawOrdersCache.filter(o => (o.status || '').trim().toLowerCase() === 'canceled');
-            const deliveredOrders = rawOrdersCache.filter(o => (o.status || '').trim().toLowerCase() === 'delivered');
+            const allDelivered = rawOrdersCache.filter(o => (o.status || '').trim().toLowerCase() === 'delivered');
             const activeOrders = rawOrdersCache.filter(o => {
                 const st = (o.status || '').trim().toLowerCase();
                 return st !== 'canceled' && st !== 'delivered';
             });
+
+            // Filter delivered orders by the chosen retention duration
+            let filteredDelivered = allDelivered;
+            if (deliveredRetentionDays !== 'all') {
+                const numDays = parseInt(deliveredRetentionDays, 10);
+                const cutoffTime = Date.now() - (numDays * 24 * 60 * 60 * 1000);
+                filteredDelivered = allDelivered.filter(o => (o.createdAt || 0) >= cutoffTime);
+            }
 
             document.getElementById('statTotalOrders').innerText = activeOrders.length;
             document.getElementById('statPendingOrders').innerText = activeOrders.filter(o => {
@@ -624,7 +676,7 @@
             const todayStr = new Date().toLocaleDateString();
             const todayIso = new Date().toISOString().split('T')[0];
 
-            [...activeOrders, ...deliveredOrders].forEach(ord => {
+            [...activeOrders, ...allDelivered].forEach(ord => {
                 const totalStr = ord.total || "0";
                 const numericTotal = parseFloat(totalStr.replace(/[^0-9.]/g, '')) || 0;
                 const isToday = ord.date ? ord.date.includes(todayStr) : true;
@@ -637,13 +689,13 @@
             document.getElementById('statTodayRevenue').innerText = `₱${todayRevenue.toFixed(2)}`;
             document.getElementById('statTodayProfit').innerText = `₱${todayNetProfit.toFixed(2)}`;
             document.getElementById('canceledOrdersCount').innerText = `${canceledOrders.length} canceled`;
-            document.getElementById('deliveredCountBadge').innerText = deliveredOrders.length;
+            
+            // Badge displays the visible count based on current retention selection
+            document.getElementById('deliveredCountBadge').innerText = filteredDelivered.length;
 
             let displayOrders = [];
-            const isDeliveredView = currentFilter === 'delivered';
-
             if (isDeliveredView) {
-                displayOrders = [...deliveredOrders];
+                displayOrders = [...filteredDelivered];
             } else if (currentFilter === 'today') {
                 displayOrders = activeOrders.filter(ord => extractScheduleDate(ord.schedule) === todayIso);
             } else if (currentFilter === 'tomorrow') {
@@ -667,7 +719,7 @@
 
             if (displayOrders.length === 0) {
                 const emptyMsg = isDeliveredView 
-                    ? `No delivered orders recorded yet.` 
+                    ? `No delivered orders found in the selected retention window.` 
                     : `No active orders matching this filter.`;
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">${emptyMsg}</td></tr>`;
                 mobileContainer.innerHTML = `<div class="text-center text-light opacity-75 py-4 small">${emptyMsg}</div>`;
@@ -703,12 +755,12 @@
                     const isOrderToday = orderSchedDate === todayIso;
                     const isAsap = scheduleDisplay.toLowerCase().includes('asap') && isOrderToday;
 
-                    // Don't show urgent blinking ASAP tags on already delivered archive orders
+                    // Non-blinking, calm badge for delivered history items
                     const urgencyPill = isDeliveredItem
-                    ? `<span class="badge bg-success bg-opacity-25 text-success rounded-pill px-2 py-1"><i class="bi bi-check2-all me-1"></i>Fulfilled</span>`
-                    : (isAsap 
-                    ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
-                    : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`);
+                        ? `<span class="badge bg-success bg-opacity-25 text-success rounded-pill px-2 py-1"><i class="bi bi-check2-all me-1"></i>Fulfilled</span>`
+                        : (isAsap 
+                            ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
+                            : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`);
 
                     let actionsHtmlDesktop = '';
                     let actionsHtmlMobile = '';
@@ -791,7 +843,7 @@
                     `;
 
                     mobileHtml += `
-                        <div class="order-mobile-card ${isAsap ? 'is-asap' : ''}">
+                        <div class="order-mobile-card ${isAsap ? 'is-asap' : ''} ${isDeliveredItem ? 'opacity-75' : ''}">
                             <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light border-opacity-10">
                                 <div class="d-flex align-items-center gap-1">
                                     ${urgencyPill}
