@@ -438,28 +438,27 @@
         let rawOrdersCache = [];
 
         window.setAdminFilter = function(filterMode, btn) {
-            currentFilter = filterMode;
+            currentFilter = (filterMode || 'asap').toLowerCase();
 
             const mobileSelect = document.getElementById('mobileFilterSelect');
-            if (mobileSelect) mobileSelect.value = filterMode;
+            if (mobileSelect) mobileSelect.value = currentFilter;
 
             document.querySelectorAll('.filter-tab-btn').forEach(b => {
                 b.classList.remove('btn-info', 'btn-success', 'active');
                 b.classList.add('btn-outline-light');
             });
 
-            const activeBtn = btn || document.querySelector(`.filter-tab-btn[data-filter="${filterMode}"]`);
+            const activeBtn = btn || document.querySelector(`.filter-tab-btn[data-filter="${currentFilter}"]`);
             if (activeBtn) {
-                if (filterMode === 'delivered') {
-                    activeBtn.classList.remove('btn-outline-light');
+                activeBtn.classList.remove('btn-outline-light');
+                if (currentFilter === 'delivered') {
                     activeBtn.classList.add('btn-success', 'active');
                 } else {
-                    activeBtn.classList.remove('btn-outline-light');
                     activeBtn.classList.add('btn-info', 'active');
                 }
             }
 
-            if (filterMode === 'delivered') {
+            if (currentFilter === 'delivered') {
                 document.getElementById('ordersQueueHeading').innerText = "Delivered Orders Archive";
             } else {
                 document.getElementById('ordersQueueHeading').innerText = "Dispatch Queue";
@@ -605,22 +604,22 @@
             });
         }
 
-        function processAndRenderOrders() {
+       function processAndRenderOrders() {
             const tbody = document.getElementById('adminOrdersTableBody');
             const mobileContainer = document.getElementById('adminOrdersMobileList');
             const canceledTbody = document.getElementById('canceledOrdersTableBody');
             const canceledMobile = document.getElementById('canceledOrdersMobileList');
 
-            const canceledOrders = rawOrdersCache.filter(o => (o.status || '').toLowerCase() === 'canceled');
-            const deliveredOrders = rawOrdersCache.filter(o => (o.status || '').toLowerCase() === 'delivered');
+            const canceledOrders = rawOrdersCache.filter(o => (o.status || '').trim().toLowerCase() === 'canceled');
+            const deliveredOrders = rawOrdersCache.filter(o => (o.status || '').trim().toLowerCase() === 'delivered');
             const activeOrders = rawOrdersCache.filter(o => {
-                const st = (o.status || '').toLowerCase();
+                const st = (o.status || '').trim().toLowerCase();
                 return st !== 'canceled' && st !== 'delivered';
             });
 
             document.getElementById('statTotalOrders').innerText = activeOrders.length;
             document.getElementById('statPendingOrders').innerText = activeOrders.filter(o => {
-                const st = (o.status || 'Preparing').toLowerCase();
+                const st = (o.status || 'Preparing').trim().toLowerCase();
                 return st === 'pending' || st === 'preparing';
             }).length;
 
@@ -648,37 +647,30 @@
             if (mobileDelivBadge) mobileDelivBadge.innerText = deliveredOrders.length;
 
             let displayOrders = [];
-            if (currentFilter === 'delivered') {
+            const activeFilter = (currentFilter || 'asap').toLowerCase();
+
+            if (activeFilter === 'delivered') {
                 displayOrders = deliveredOrders;
+            } else if (activeFilter === 'today') {
+                displayOrders = activeOrders.filter(ord => extractScheduleDate(ord.schedule) === todayIso);
+            } else if (activeFilter === 'tomorrow') {
+                displayOrders = activeOrders.filter(ord => extractScheduleDate(ord.schedule) > todayIso);
             } else {
-                displayOrders = activeOrders.filter(ord => {
-                    const targetDate = extractScheduleDate(ord.schedule);
-                    if (currentFilter === 'today') {
-                        return targetDate === todayIso;
-                    }
-                    if (currentFilter === 'tomorrow') {
-                        return targetDate > todayIso;
-                    }
-                    return true;
-                });
+                displayOrders = activeOrders;
             }
 
             displayOrders.sort((a, b) => {
                 const dateA = extractScheduleDate(a.schedule);
                 const dateB = extractScheduleDate(b.schedule);
 
-                if (dateA !== dateB) {
-                    return dateA.localeCompare(dateB);
-                }
+                if (dateA !== dateB) return dateA.localeCompare(dateB);
 
                 const slotWeightA = getTimeSlotWeight(a.schedule);
                 const slotWeightB = getTimeSlotWeight(b.schedule);
 
-                if (slotWeightA !== slotWeightB) {
-                    return slotWeightA - slotWeightB;
-                }
+                if (slotWeightA !== slotWeightB) return slotWeightA - slotWeightB;
 
-                return (a.createdAt || 0) - (b.createdAt || 0);
+                return (b.createdAt || 0) - (a.createdAt || 0);
             });
 
             if (displayOrders.length === 0) {
