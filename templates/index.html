@@ -11,6 +11,41 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Shimmer Text Effect for Main Title */
+        .shimmer-text {
+            background: linear-gradient(90deg, #f8fafc 0%, #38bdf8 50%, #f8fafc 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+
+        /* Pulsing Glow Animation for Action Buttons */
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.3s ease;
+            animation: pulseGlow 3s infinite; /* Adds the continuous subtle pulse */
+        }
+        .btn-glow:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 25px rgba(56, 189, 248, 0.6);
+            color: #fff;
+        }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: linear-gradient(135deg, #050b14 0%, #0c2340 40%, #0284c7 100%);
@@ -307,7 +342,7 @@
                     <span class="badge badge-pill px-3 py-2 rounded-pill fw-semibold small mb-3 d-inline-block">
                         <i class="bi bi-shield-check me-1"></i> DOH Standards & Pure Drinking Water
                     </span>
-                    <h1 class="display-4 fw-extrabold mb-3 tracking-tight text-white">Pure, Refreshing Water. <span style="color: #38bdf8;">Delivered Fast.</span></h1>
+                    <h1 class="display-4 fw-extrabold mb-3 tracking-tight shimmer-text">Pure, Refreshing Water. <span style="color: #38bdf8;">Delivered Fast.</span></h1>
                     <p class="lead mb-4 text-light opacity-75" style="max-width: 550px;">Wellfind Water Refilling Station brings clean, multi-stage purified drinking water straight to your doorstep in San Mateo — anytime you need it.</p>
                     <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
                         <button class="btn btn-glow btn-lg px-5 py-3 rounded-pill" id="heroOrderBtn">Order Now</button>
