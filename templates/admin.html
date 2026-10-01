@@ -278,12 +278,12 @@
                         <h5 class="fw-bold text-white mb-0" id="ordersQueueHeading">Dispatch Queue</h5>
                         <p class="text-light opacity-75 small mb-0 d-none d-md-block">Real-time order routing, calendar date prioritization, and fulfillment tracking.</p>
                     </div>
-                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="loadAdminOrders()">
+                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1" onclick="triggerManualReload()">
                         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
                 </div>
 
-                <!-- Option 2: Mobile Compact Dropdown Selector (Visible only on mobile) -->
+                <!-- Mobile Compact Dropdown Selector -->
                 <div class="d-block d-md-none mb-3">
                     <label class="form-label text-light opacity-75 small fw-semibold mb-1">
                         <i class="bi bi-funnel me-1 text-info"></i> Queue View Filter:
@@ -297,7 +297,7 @@
                     </select>
                 </div>
 
-                <!-- Desktop Filter Tab Pills (Visible only on Desktop/Tablet) -->
+                <!-- Desktop Filter Tab Pills -->
                 <div class="d-none d-md-flex flex-wrap gap-2 mb-3 pb-2 border-bottom border-light border-opacity-10">
                     <button class="btn btn-sm btn-info rounded-pill px-3 filter-tab-btn active" data-filter="asap" onclick="setAdminFilter('asap', this)">
                         <i class="bi bi-lightning-charge-fill me-1"></i> Earliest Date / Urgent
@@ -400,17 +400,16 @@
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Firebase SDK & Admin Script (Isolated Named Admin App) -->
+    <!-- Firebase SDK & Admin Script -->
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { 
             getAuth, 
             signInWithEmailAndPassword, 
             signOut, 
-            setPersistence, 
-            browserSessionPersistence 
+            onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBq-O2wMnfMWr9WyTSh_yyLtwutL7ff7TM",
@@ -422,14 +421,9 @@
             measurementId: "G-4GDMM90MH6"
         };
 
-        const adminApp = getApps().some(a => a.name === "adminApp") 
-            ? getApp("adminApp") 
-            : initializeApp(firebaseConfig, "adminApp");
-
-        const auth = getAuth(adminApp);
-        const db = getFirestore(adminApp);
-
-        setPersistence(auth, browserSessionPersistence).catch(console.error);
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         const loginWrapper = document.getElementById('adminLoginWrapper');
         const dashboardContent = document.getElementById('adminDashboardContent');
@@ -440,15 +434,15 @@
         const confirmModalInstance = new bootstrap.Modal(document.getElementById('adminConfirmModal'));
         let pendingActionCallback = null;
         let currentFilter = 'asap';
+        let unsubscribeOrdersListener = null;
+        let rawOrdersCache = [];
 
         window.setAdminFilter = function(filterMode, btn) {
             currentFilter = filterMode;
 
-            // Sync Mobile Select Dropdown value
             const mobileSelect = document.getElementById('mobileFilterSelect');
             if (mobileSelect) mobileSelect.value = filterMode;
 
-            // Sync Desktop Button Pills
             document.querySelectorAll('.filter-tab-btn').forEach(b => {
                 b.classList.remove('btn-info', 'btn-success', 'active');
                 b.classList.add('btn-outline-light');
@@ -471,7 +465,11 @@
                 document.getElementById('ordersQueueHeading').innerText = "Dispatch Queue";
             }
 
-            loadAdminOrders();
+            processAndRenderOrders();
+        };
+
+        window.triggerManualReload = function() {
+            processAndRenderOrders();
         };
 
         function showStyledConfirm(title, text, confirmBtnText, callback) {
@@ -526,15 +524,27 @@
             dashboardContent.classList.remove('d-none');
             document.getElementById('adminUserEmail').innerText = email;
             logoutBtn.classList.remove('d-none');
-            loadAdminOrders();
+            listenToAdminOrdersLive();
         }
 
         function renderAdminLoggedOut() {
+            if (unsubscribeOrdersListener) {
+                unsubscribeOrdersListener();
+                unsubscribeOrdersListener = null;
+            }
             loginWrapper.classList.remove('d-none');
             dashboardContent.classList.add('d-none');
             document.getElementById('adminUserEmail').innerText = "Requires Admin Sign-In";
             logoutBtn.classList.add('d-none');
         }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && allowedAdmins.includes(user.email)) {
+                renderAdminDashboard(user.email);
+            } else {
+                renderAdminLoggedOut();
+            }
+        });
 
         document.getElementById('adminLoginSubmitBtn').addEventListener('click', async () => {
             const email = document.getElementById('adminLoginEmail').value.trim();
@@ -550,13 +560,10 @@
                 const userCred = await signInWithEmailAndPassword(auth, email, password);
                 if (!allowedAdmins.includes(userCred.user.email)) {
                     await signOut(auth);
-                    sessionStorage.removeItem('wellfind_admin_auth');
                     loginAlert.innerText = "Access Denied: Not an authorized administrator account.";
                     loginAlert.classList.remove('d-none');
                 } else {
-                    sessionStorage.setItem('wellfind_admin_auth', userCred.user.email);
                     loginAlert.classList.add('d-none');
-                    renderAdminDashboard(userCred.user.email);
                 }
             } catch (error) {
                 loginAlert.innerText = "Login Error: " + error.message;
@@ -564,323 +571,326 @@
             }
         });
 
-        const savedAdmin = sessionStorage.getItem('wellfind_admin_auth');
-        if (savedAdmin && allowedAdmins.includes(savedAdmin)) {
-            renderAdminDashboard(savedAdmin);
-        } else {
-            renderAdminLoggedOut();
-        }
-
         logoutBtn.addEventListener('click', async () => { 
-            sessionStorage.removeItem('wellfind_admin_auth');
             await signOut(auth); 
             renderAdminLoggedOut();
         });
 
-        window.loadAdminOrders = async function() {
+        function listenToAdminOrdersLive() {
+            if (unsubscribeOrdersListener) unsubscribeOrdersListener();
+
+            const tbody = document.getElementById('adminOrdersTableBody');
+            const mobileContainer = document.getElementById('adminOrdersMobileList');
+
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">Connecting to live cloud stream...</td></tr>`;
+            mobileContainer.innerHTML = `<div class="text-center text-light opacity-75 py-4 small">Connecting to live cloud stream...</div>`;
+
+            unsubscribeOrdersListener = onSnapshot(collection(db, "orders"), (snapshot) => {
+                const ordersList = [];
+                snapshot.forEach(docSnap => {
+                    ordersList.push({ firebaseId: docSnap.id, ...docSnap.data() });
+                });
+                rawOrdersCache = ordersList;
+                processAndRenderOrders();
+            }, (error) => {
+                console.error("Firestore stream error:", error);
+                const errAlert = `
+                    <div class="alert alert-danger bg-danger bg-opacity-25 border-danger border-opacity-50 text-white p-3 text-center my-3">
+                        <i class="bi bi-shield-x fs-3 d-block mb-1"></i>
+                        <strong>Database Access Error:</strong> ${error.message}
+                        <div class="extra-small opacity-75 mt-1">Make sure you are signed in with an authorized admin email and Firestore rules allow read/write.</div>
+                    </div>`;
+                tbody.innerHTML = `<tr><td colspan="6">${errAlert}</td></tr>`;
+                mobileContainer.innerHTML = errAlert;
+            });
+        }
+
+        function processAndRenderOrders() {
             const tbody = document.getElementById('adminOrdersTableBody');
             const mobileContainer = document.getElementById('adminOrdersMobileList');
             const canceledTbody = document.getElementById('canceledOrdersTableBody');
             const canceledMobile = document.getElementById('canceledOrdersMobileList');
 
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">Loading orders...</td></tr>`;
-            mobileContainer.innerHTML = `<div class="text-center text-light opacity-75 py-4 small">Loading orders...</div>`;
+            const canceledOrders = rawOrdersCache.filter(o => (o.status || '').toLowerCase() === 'canceled');
+            const deliveredOrders = rawOrdersCache.filter(o => (o.status || '').toLowerCase() === 'delivered');
+            const activeOrders = rawOrdersCache.filter(o => {
+                const st = (o.status || '').toLowerCase();
+                return st !== 'canceled' && st !== 'delivered';
+            });
 
-            try {
-                const querySnapshot = await getDocs(collection(db, "orders"));
-                const allOrders = [];
-                querySnapshot.forEach((docSnap) => {
-                    allOrders.push({ firebaseId: docSnap.id, ...docSnap.data() });
-                });
+            document.getElementById('statTotalOrders').innerText = activeOrders.length;
+            document.getElementById('statPendingOrders').innerText = activeOrders.filter(o => {
+                const st = (o.status || 'Preparing').toLowerCase();
+                return st === 'pending' || st === 'preparing';
+            }).length;
 
-                const canceledOrders = allOrders.filter(o => (o.status || '').toLowerCase() === 'canceled');
-                const deliveredOrders = allOrders.filter(o => (o.status || '').toLowerCase() === 'delivered');
-                const activeOrders = allOrders.filter(o => {
-                    const st = (o.status || '').toLowerCase();
-                    return st !== 'canceled' && st !== 'delivered';
-                });
+            let todayRevenue = 0;
+            let todayNetProfit = 0;
+            const todayStr = new Date().toLocaleDateString();
+            const todayIso = new Date().toISOString().split('T')[0];
 
-                document.getElementById('statTotalOrders').innerText = activeOrders.length;
-                document.getElementById('statPendingOrders').innerText = activeOrders.filter(o => {
-                    const st = (o.status || 'Preparing').toLowerCase();
-                    return st === 'pending' || st === 'preparing';
-                }).length;
-
-                let todayRevenue = 0;
-                let todayNetProfit = 0;
-                const todayStr = new Date().toLocaleDateString();
-                const todayIso = new Date().toISOString().split('T')[0];
-
-                [...activeOrders, ...deliveredOrders].forEach(ord => {
-                    const totalStr = ord.total || "0";
-                    const numericTotal = parseFloat(totalStr.replace(/[^0-9.]/g, '')) || 0;
-                    const isToday = ord.date ? ord.date.includes(todayStr) : true;
-                    if (isToday) {
-                        todayRevenue += numericTotal;
-                        todayNetProfit += calculateOrderProfit(ord.item, ord.quantity, numericTotal);
-                    }
-                });
-
-                document.getElementById('statTodayRevenue').innerText = `₱${todayRevenue.toFixed(2)}`;
-                document.getElementById('statTodayProfit').innerText = `₱${todayNetProfit.toFixed(2)}`;
-                document.getElementById('canceledOrdersCount').innerText = `${canceledOrders.length} canceled`;
-                document.getElementById('deliveredCountBadge').innerText = deliveredOrders.length;
-
-                const mobileDelivBadge = document.getElementById('mobileDeliveredCount');
-                if (mobileDelivBadge) mobileDelivBadge.innerText = deliveredOrders.length;
-
-                let displayOrders = [];
-                if (currentFilter === 'delivered') {
-                    displayOrders = deliveredOrders;
-                } else {
-                    displayOrders = activeOrders.filter(ord => {
-                        const targetDate = extractScheduleDate(ord.schedule);
-                        if (currentFilter === 'today') {
-                            return targetDate === todayIso;
-                        }
-                        if (currentFilter === 'tomorrow') {
-                            return targetDate > todayIso;
-                        }
-                        return true;
-                    });
+            [...activeOrders, ...deliveredOrders].forEach(ord => {
+                const totalStr = ord.total || "0";
+                const numericTotal = parseFloat(totalStr.replace(/[^0-9.]/g, '')) || 0;
+                const isToday = ord.date ? ord.date.includes(todayStr) : true;
+                if (isToday) {
+                    todayRevenue += numericTotal;
+                    todayNetProfit += calculateOrderProfit(ord.item, ord.quantity, numericTotal);
                 }
+            });
 
-                displayOrders.sort((a, b) => {
-                    const dateA = extractScheduleDate(a.schedule);
-                    const dateB = extractScheduleDate(b.schedule);
+            document.getElementById('statTodayRevenue').innerText = `₱${todayRevenue.toFixed(2)}`;
+            document.getElementById('statTodayProfit').innerText = `₱${todayNetProfit.toFixed(2)}`;
+            document.getElementById('canceledOrdersCount').innerText = `${canceledOrders.length} canceled`;
+            document.getElementById('deliveredCountBadge').innerText = deliveredOrders.length;
 
-                    if (dateA !== dateB) {
-                        return dateA.localeCompare(dateB);
+            const mobileDelivBadge = document.getElementById('mobileDeliveredCount');
+            if (mobileDelivBadge) mobileDelivBadge.innerText = deliveredOrders.length;
+
+            let displayOrders = [];
+            if (currentFilter === 'delivered') {
+                displayOrders = deliveredOrders;
+            } else {
+                displayOrders = activeOrders.filter(ord => {
+                    const targetDate = extractScheduleDate(ord.schedule);
+                    if (currentFilter === 'today') {
+                        return targetDate === todayIso;
                     }
-
-                    const slotWeightA = getTimeSlotWeight(a.schedule);
-                    const slotWeightB = getTimeSlotWeight(b.schedule);
-
-                    if (slotWeightA !== slotWeightB) {
-                        return slotWeightA - slotWeightB;
+                    if (currentFilter === 'tomorrow') {
+                        return targetDate > todayIso;
                     }
-
-                    return (a.createdAt || 0) - (b.createdAt || 0);
+                    return true;
                 });
-
-                if (displayOrders.length === 0) {
-                    const emptyMsg = currentFilter === 'delivered' 
-                        ? `No delivered orders recorded yet.` 
-                        : `No active orders matching this filter.`;
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">${emptyMsg}</td></tr>`;
-                    mobileContainer.innerHTML = `<div class="text-center text-light opacity-75 py-4 small">${emptyMsg}</div>`;
-                } else {
-                    let desktopHtml = '';
-                    let mobileHtml = '';
-
-                    displayOrders.forEach(ord => {
-                        let status = ord.status || 'Preparing';
-                        if (status === 'Pending') status = 'Preparing';
-
-                        let badgeClass = 'bg-warning text-dark';
-                        let statusIcon = '<i class="bi bi-hourglass-split"></i>';
-
-                        if (status === 'Out for Delivery' || status === 'Dispatching') {
-                            badgeClass = 'bg-info text-dark';
-                            statusIcon = '<i class="bi bi-truck"></i>';
-                            status = 'Out for Delivery';
-                        } else if (status === 'Delivered') {
-                            badgeClass = 'bg-success text-white';
-                            statusIcon = '<i class="bi bi-check-circle-fill"></i>';
-                        }
-
-                        const shortId = ord.firebaseId.slice(-6);
-                        const itemDisplay = `${ord.quantity || 1}x ${ord.item || 'Pure Refill'}`;
-                        const addressDisplay = ord.address || 'San Mateo Delivery';
-                        const totalDisplay = ord.total || '₱35.00';
-                        const scheduleDisplay = ord.schedule || 'ASAP (Within 1 Hour)';
-                        const dateDisplay = ord.date || 'Recent';
-
-                        const orderSchedDate = extractScheduleDate(scheduleDisplay);
-                        const isOrderToday = orderSchedDate === todayIso;
-                        const isAsap = scheduleDisplay.toLowerCase().includes('asap') && isOrderToday;
-
-                        const urgencyPill = isAsap 
-                            ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
-                            : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`;
-
-                        desktopHtml += `
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center gap-1 mb-1">
-                                        ${urgencyPill}
-                                        <strong class="text-white">#${shortId}</strong>
-                                    </div>
-                                    <span class="text-light fw-medium small">${scheduleDisplay}</span>
-                                </td>
-                                <td>
-                                    <span class="text-light">${addressDisplay}</span><br>
-                                    <span class="text-info extra-small">${ord.userEmail || ''}</span>
-                                </td>
-                                <td>
-                                    <strong class="text-info">${itemDisplay}</strong><br>
-                                    <span class="text-success fw-semibold extra-small">Total: ${totalDisplay}</span>
-                                </td>
-                                <td><span class="text-light opacity-50 extra-small">${dateDisplay}</span></td>
-                                <td><span class="badge ${badgeClass} fw-bold px-2 py-1">${statusIcon} ${status}</span></td>
-                                <td class="text-end">
-                                    <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
-                                        <button class="btn btn-sm btn-outline-warning ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')" title="Mark Preparing">
-                                            Preparing
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')" title="Mark Out for Delivery">
-                                            Dispatch
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')" title="Mark Delivered">
-                                            Done
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="archiveOrder('${ord.firebaseId}')" title="Cancel/Void Order">
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-
-                        mobileHtml += `
-                            <div class="order-mobile-card ${isAsap ? 'is-asap' : ''}">
-                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light border-opacity-10">
-                                    <div class="d-flex align-items-center gap-1">
-                                        ${urgencyPill}
-                                        <span class="badge bg-light bg-opacity-10 text-white border border-light border-opacity-25 px-2 py-1">#${shortId}</span>
-                                        <small class="text-light opacity-50 ms-1" style="font-size: 0.72rem;">${dateDisplay}</small>
-                                    </div>
-                                    <span class="badge ${badgeClass} fw-bold px-2 py-1">
-                                        ${statusIcon} ${status}
-                                    </span>
-                                </div>
-
-                                <div class="mb-2">
-                                    <h6 class="fw-bold text-info mb-1">${itemDisplay}</h6>
-                                    <div class="small text-light opacity-90 mb-1">
-                                        <span><i class="bi bi-geo-alt text-danger me-1"></i> ${addressDisplay}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between small">
-                                        <span class="text-light opacity-75"><i class="bi bi-clock me-1"></i> ${scheduleDisplay}</span>
-                                        <strong class="text-success">${totalDisplay}</strong>
-                                    </div>
-                                </div>
-
-                                <!-- Balanced 2x2 Grid for Mobile Action Buttons -->
-                                <div class="row g-2 pt-2 border-top border-light border-opacity-10">
-                                    <div class="col-6">
-                                        <button class="btn btn-outline-warning w-100 action-btn-mobile ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')">
-                                            <i class="bi bi-hourglass-split"></i> Preparing
-                                        </button>
-                                    </div>
-                                    <div class="col-6">
-                                        <button class="btn btn-outline-info w-100 action-btn-mobile ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')">
-                                            <i class="bi bi-truck"></i> Dispatch
-                                        </button>
-                                    </div>
-                                    <div class="col-6">
-                                        <button class="btn btn-outline-success w-100 action-btn-mobile ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')">
-                                            <i class="bi bi-check-circle"></i> Delivered
-                                        </button>
-                                    </div>
-                                    <div class="col-6">
-                                        <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="archiveOrder('${ord.firebaseId}')">
-                                            <i class="bi bi-x-circle"></i> Void
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    tbody.innerHTML = desktopHtml;
-                    mobileContainer.innerHTML = mobileHtml;
-                }
-
-                if (canceledOrders.length === 0) {
-                    canceledTbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-50 py-3">No canceled orders in record.</td></tr>`;
-                    canceledMobile.innerHTML = `<div class="text-center text-light opacity-50 py-3 small">No canceled orders in record.</div>`;
-                } else {
-                    let cancelDesktopHtml = '';
-                    let cancelMobileHtml = '';
-
-                    canceledOrders.forEach(ord => {
-                        const shortId = ord.firebaseId.slice(-6);
-                        const itemDisplay = `${ord.quantity || 1}x ${ord.item || 'Order'}`;
-                        const addressDisplay = ord.address || 'San Mateo';
-                        const totalDisplay = ord.total || '₱0.00';
-                        const dateDisplay = ord.date || 'Recent';
-                        const canceledSource = ord.canceledBy === 'Customer' ? 'By Customer' : 'By Station';
-
-                        cancelDesktopHtml += `
-                            <tr>
-                                <td>
-                                    <span class="text-light opacity-75">#${shortId}</span><br>
-                                    <span class="text-light opacity-50 extra-small">${dateDisplay}</span>
-                                </td>
-                                <td>
-                                    <span class="text-light opacity-75">${addressDisplay}</span><br>
-                                    <span class="text-info extra-small">${ord.userEmail || ''}</span>
-                                </td>
-                                <td><span class="text-light opacity-75 text-decoration-line-through">${itemDisplay}</span></td>
-                                <td><span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">${canceledSource}</span></td>
-                                <td><span class="text-light opacity-50">${totalDisplay}</span></td>
-                                <td class="text-end">
-                                    <div class="d-inline-flex gap-2">
-                                        <button class="btn btn-sm btn-restore rounded-pill px-3 py-1" onclick="restoreOrder('${ord.firebaseId}')" title="Restore to Active">
-                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" onclick="permanentDeleteOrder('${ord.firebaseId}')" title="Delete Permanently">
-                                            <i class="bi bi-trash me-1"></i> Delete
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-
-                        cancelMobileHtml += `
-                            <div class="order-mobile-card border-danger border-opacity-25 mb-2">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="badge bg-danger bg-opacity-25 text-danger">#${shortId} • Canceled (${canceledSource})</span>
-                                    <small class="text-light opacity-50">${dateDisplay}</small>
-                                </div>
-                                <div class="small text-light opacity-75 mb-2">
-                                    <span class="text-decoration-line-through">${itemDisplay}</span> (${totalDisplay})<br>
-                                    <span class="extra-small">${addressDisplay}</span>
-                                </div>
-                                <div class="row g-2 pt-1 border-top border-light border-opacity-10">
-                                    <div class="col-6">
-                                        <button class="btn btn-restore w-100 action-btn-mobile" onclick="restoreOrder('${ord.firebaseId}')">
-                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
-                                        </button>
-                                    </div>
-                                    <div class="col-6">
-                                        <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="permanentDeleteOrder('${ord.firebaseId}')">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    canceledTbody.innerHTML = cancelDesktopHtml;
-                    canceledMobile.innerHTML = cancelMobileHtml;
-                }
-
-            } catch (error) {
-                console.error("Error loading orders: ", error);
-                const errHtml = `<div class="text-center text-danger py-4">Failed to load cloud orders.</div>`;
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load cloud orders.</td></tr>`;
-                mobileContainer.innerHTML = errHtml;
             }
-        };
+
+            displayOrders.sort((a, b) => {
+                const dateA = extractScheduleDate(a.schedule);
+                const dateB = extractScheduleDate(b.schedule);
+
+                if (dateA !== dateB) {
+                    return dateA.localeCompare(dateB);
+                }
+
+                const slotWeightA = getTimeSlotWeight(a.schedule);
+                const slotWeightB = getTimeSlotWeight(b.schedule);
+
+                if (slotWeightA !== slotWeightB) {
+                    return slotWeightA - slotWeightB;
+                }
+
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            });
+
+            if (displayOrders.length === 0) {
+                const emptyMsg = currentFilter === 'delivered' 
+                    ? `No delivered orders recorded yet.` 
+                    : `No active orders matching this filter.`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-75 py-4">${emptyMsg}</td></tr>`;
+                mobileContainer.innerHTML = `<div class="text-center text-light opacity-75 py-4 small">${emptyMsg}</div>`;
+            } else {
+                let desktopHtml = '';
+                let mobileHtml = '';
+
+                displayOrders.forEach(ord => {
+                    let status = ord.status || 'Preparing';
+                    if (status === 'Pending') status = 'Preparing';
+
+                    let badgeClass = 'bg-warning text-dark';
+                    let statusIcon = '<i class="bi bi-hourglass-split"></i>';
+
+                    if (status === 'Out for Delivery' || status === 'Dispatching') {
+                        badgeClass = 'bg-info text-dark';
+                        statusIcon = '<i class="bi bi-truck"></i>';
+                        status = 'Out for Delivery';
+                    } else if (status === 'Delivered') {
+                        badgeClass = 'bg-success text-white';
+                        statusIcon = '<i class="bi bi-check-circle-fill"></i>';
+                    }
+
+                    const shortId = ord.firebaseId.slice(-6);
+                    const itemDisplay = `${ord.quantity || 1}x ${ord.item || 'Pure Refill'}`;
+                    const addressDisplay = ord.address || 'San Mateo Delivery';
+                    const totalDisplay = ord.total || '₱35.00';
+                    const scheduleDisplay = ord.schedule || 'ASAP (Within 1 Hour)';
+                    const dateDisplay = ord.date || 'Recent';
+
+                    const orderSchedDate = extractScheduleDate(scheduleDisplay);
+                    const isOrderToday = orderSchedDate === todayIso;
+                    const isAsap = scheduleDisplay.toLowerCase().includes('asap') && isOrderToday;
+
+                    const urgencyPill = isAsap 
+                        ? `<span class="badge badge-asap rounded-pill px-2 py-1"><i class="bi bi-lightning-charge-fill me-1"></i>ASAP</span>`
+                        : `<span class="badge bg-secondary text-light rounded-pill px-2 py-1"><i class="bi bi-calendar3 me-1"></i>${orderSchedDate}</span>`;
+
+                    desktopHtml += `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-1 mb-1">
+                                    ${urgencyPill}
+                                    <strong class="text-white">#${shortId}</strong>
+                                </div>
+                                <span class="text-light fw-medium small">${scheduleDisplay}</span>
+                            </td>
+                            <td>
+                                <span class="text-light">${addressDisplay}</span><br>
+                                <span class="text-info extra-small">${ord.userEmail || ''}</span>
+                            </td>
+                            <td>
+                                <strong class="text-info">${itemDisplay}</strong><br>
+                                <span class="text-success fw-semibold extra-small">Total: ${totalDisplay}</span>
+                            </td>
+                            <td><span class="text-light opacity-50 extra-small">${dateDisplay}</span></td>
+                            <td><span class="badge ${badgeClass} fw-bold px-2 py-1">${statusIcon} ${status}</span></td>
+                            <td class="text-end">
+                                <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                    <button class="btn btn-sm btn-outline-warning ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')" title="Mark Preparing">
+                                        Preparing
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')" title="Mark Out for Delivery">
+                                        Dispatch
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')" title="Mark Delivered">
+                                        Done
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="archiveOrder('${ord.firebaseId}')" title="Cancel/Void Order">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    mobileHtml += `
+                        <div class="order-mobile-card ${isAsap ? 'is-asap' : ''}">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light border-opacity-10">
+                                <div class="d-flex align-items-center gap-1">
+                                    ${urgencyPill}
+                                    <span class="badge bg-light bg-opacity-10 text-white border border-light border-opacity-25 px-2 py-1">#${shortId}</span>
+                                    <small class="text-light opacity-50 ms-1" style="font-size: 0.72rem;">${dateDisplay}</small>
+                                </div>
+                                <span class="badge ${badgeClass} fw-bold px-2 py-1">
+                                    ${statusIcon} ${status}
+                                </span>
+                            </div>
+
+                            <div class="mb-2">
+                                <h6 class="fw-bold text-info mb-1">${itemDisplay}</h6>
+                                <div class="small text-light opacity-90 mb-1">
+                                    <span><i class="bi bi-geo-alt text-danger me-1"></i> ${addressDisplay}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span class="text-light opacity-75"><i class="bi bi-clock me-1"></i> ${scheduleDisplay}</span>
+                                    <strong class="text-success">${totalDisplay}</strong>
+                                </div>
+                            </div>
+
+                            <!-- Balanced 2x2 Grid for Mobile Action Buttons -->
+                            <div class="row g-2 pt-2 border-top border-light border-opacity-10">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-warning w-100 action-btn-mobile ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')">
+                                        <i class="bi bi-hourglass-split"></i> Preparing
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-info w-100 action-btn-mobile ${status === 'Out for Delivery' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Out for Delivery')">
+                                        <i class="bi bi-truck"></i> Dispatch
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success w-100 action-btn-mobile ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')">
+                                        <i class="bi bi-check-circle"></i> Delivered
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="archiveOrder('${ord.firebaseId}')">
+                                        <i class="bi bi-x-circle"></i> Void
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                tbody.innerHTML = desktopHtml;
+                mobileContainer.innerHTML = mobileHtml;
+            }
+
+            if (canceledOrders.length === 0) {
+                canceledTbody.innerHTML = `<tr><td colspan="6" class="text-center text-light opacity-50 py-3">No canceled orders in record.</td></tr>`;
+                canceledMobile.innerHTML = `<div class="text-center text-light opacity-50 py-3 small">No canceled orders in record.</div>`;
+            } else {
+                let cancelDesktopHtml = '';
+                let cancelMobileHtml = '';
+
+                canceledOrders.forEach(ord => {
+                    const shortId = ord.firebaseId.slice(-6);
+                    const itemDisplay = `${ord.quantity || 1}x ${ord.item || 'Order'}`;
+                    const addressDisplay = ord.address || 'San Mateo';
+                    const totalDisplay = ord.total || '₱0.00';
+                    const dateDisplay = ord.date || 'Recent';
+                    const canceledSource = ord.canceledBy === 'Customer' ? 'By Customer' : 'By Station';
+
+                    cancelDesktopHtml += `
+                        <tr>
+                            <td>
+                                <span class="text-light opacity-75">#${shortId}</span><br>
+                                <span class="text-light opacity-50 extra-small">${dateDisplay}</span>
+                            </td>
+                            <td>
+                                <span class="text-light opacity-75">${addressDisplay}</span><br>
+                                <span class="text-info extra-small">${ord.userEmail || ''}</span>
+                            </td>
+                            <td><span class="text-light opacity-75 text-decoration-line-through">${itemDisplay}</span></td>
+                            <td><span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">${canceledSource}</span></td>
+                            <td><span class="text-light opacity-50">${totalDisplay}</span></td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <button class="btn btn-sm btn-restore rounded-pill px-3 py-1" onclick="restoreOrder('${ord.firebaseId}')" title="Restore to Active">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" onclick="permanentDeleteOrder('${ord.firebaseId}')" title="Delete Permanently">
+                                        <i class="bi bi-trash me-1"></i> Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    cancelMobileHtml += `
+                        <div class="order-mobile-card border-danger border-opacity-25 mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-danger bg-opacity-25 text-danger">#${shortId} • Canceled (${canceledSource})</span>
+                                <small class="text-light opacity-50">${dateDisplay}</small>
+                            </div>
+                            <div class="small text-light opacity-75 mb-2">
+                                <span class="text-decoration-line-through">${itemDisplay}</span> (${totalDisplay})<br>
+                                <span class="extra-small">${addressDisplay}</span>
+                            </div>
+                            <div class="row g-2 pt-1 border-top border-light border-opacity-10">
+                                <div class="col-6">
+                                    <button class="btn btn-restore w-100 action-btn-mobile" onclick="restoreOrder('${ord.firebaseId}')">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="permanentDeleteOrder('${ord.firebaseId}')">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                canceledTbody.innerHTML = cancelDesktopHtml;
+                canceledMobile.innerHTML = cancelMobileHtml;
+            }
+        }
 
         window.changeStatus = async function(firebaseId, status) {
             try {
                 const orderRef = doc(db, "orders", firebaseId);
                 await updateDoc(orderRef, { status: status });
-                loadAdminOrders();
             } catch (error) {
                 console.error("Status update error:", error);
             }
@@ -899,7 +909,6 @@
                             canceledBy: "Station",
                             canceledAt: Date.now()
                         });
-                        loadAdminOrders();
                     } catch (error) {
                         console.error("Archive error:", error);
                     }
@@ -911,7 +920,6 @@
             try {
                 const orderRef = doc(db, "orders", firebaseId);
                 await updateDoc(orderRef, { status: "Preparing" });
-                loadAdminOrders();
             } catch (error) {
                 console.error("Restore error:", error);
             }
@@ -925,7 +933,6 @@
                 async () => {
                     try {
                         await deleteDoc(doc(db, "orders", firebaseId));
-                        loadAdminOrders();
                     } catch (error) {
                         console.error("Delete error:", error);
                     }
