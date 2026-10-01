@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Wellfind Admin — Station Management Portal</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,6 +11,13 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+            position: relative;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: linear-gradient(135deg, #050b14 0%, #0c2340 40%, #0284c7 100%);
@@ -18,11 +25,13 @@
             color: #f8fafc;
             min-height: 100vh;
         }
+
         .navbar {
             background: rgba(5, 11, 20, 0.9)!important;
             backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(12px);
@@ -30,6 +39,7 @@
             border-radius: 1.25rem;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
         }
+
         .order-mobile-card {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -38,54 +48,112 @@
             margin-bottom: 0.85rem;
             transition: all 0.2s ease;
         }
+
         .order-mobile-card:hover {
             background: rgba(255, 255, 255, 0.07);
             border-color: rgba(56, 189, 248, 0.3);
         }
+
         .order-mobile-card.is-asap {
             border-left: 4px solid #ef4444;
             background: rgba(239, 68, 68, 0.05);
         }
+
         .btn-glow {
             background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
-            border: none; color: #fff; font-weight: 600;
+            border: none;
+            color: #fff;
+            font-weight: 600;
             box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+            transition: all 0.2s ease;
         }
+
+        .btn-glow:hover {
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
         .table-dark th, .table-dark td {
             background-color: rgba(255, 255, 255, 0.03) !important;
             border-color: rgba(255, 255, 255, 0.08) !important;
             color: #f8fafc !important;
         }
+
+        /* Clean, Responsive Action Buttons */
         .action-btn-mobile {
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
-            padding: 0.45rem 0.5rem;
-            border-radius: 0.6rem;
-            display: flex;
+            padding: 0.5rem 0.4rem;
+            border-radius: 0.55rem;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 4px;
             transition: all 0.15s ease;
+            white-space: nowrap;
         }
-        .action-btn-mobile:active { transform: scale(0.96); }
+
+        .action-btn-mobile:active {
+            transform: scale(0.97);
+        }
+
+        /* High-contrast Restore button */
+        .btn-restore {
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.5) !important;
+            background: rgba(56, 189, 248, 0.12) !important;
+            font-weight: 600 !important;
+        }
+
+        .btn-restore:hover {
+            background: rgba(56, 189, 248, 0.25) !important;
+            color: #ffffff !important;
+            border-color: #38bdf8 !important;
+        }
+
         .filter-tab-btn {
             font-size: 0.8rem;
             font-weight: 600;
             transition: all 0.2s ease;
         }
+
         .badge-asap {
             background: #ef4444;
             color: #fff;
             animation: pulseGlow 2s infinite;
         }
+
         @keyframes pulseGlow {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
             70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        .form-control { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; }
-        .form-control:focus { background: rgba(255, 255, 255, 0.12); color: #fff; border-color: #38bdf8; }
-        .form-control::placeholder { color: rgba(255, 255, 255, 0.4); }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        /* Clean up Mobile autofill background discoloration */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #ffffff !important;
+            -webkit-box-shadow: 0 0 0px 1000px #0c2340 inset !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
     </style>
 </head>
 <body>
@@ -119,11 +187,11 @@
                     <div id="adminLoginAlert" class="alert alert-danger bg-danger bg-opacity-25 text-danger border-danger border-opacity-25 small mb-3 d-none"></div>
                     <div class="mb-3">
                         <label class="form-label text-light opacity-75 fw-semibold small">Admin Email</label>
-                        <input type="email" id="adminLoginEmail" class="form-control" placeholder="danzlomtong10@gmail.com">
+                        <input type="email" id="adminLoginEmail" class="form-control" placeholder="admin@wellfind.com" autocomplete="off" autocapitalize="none">
                     </div>
                     <div class="mb-4">
                         <label class="form-label text-light opacity-75 fw-semibold small">Password</label>
-                        <input type="password" id="adminLoginPassword" class="form-control" placeholder="••••••••">
+                        <input type="password" id="adminLoginPassword" class="form-control" placeholder="••••••••" autocomplete="current-password">
                     </div>
                     <button id="adminLoginSubmitBtn" class="btn btn-glow w-100 py-3 rounded-pill fw-semibold">Sign In to Dashboard</button>
                 </div>
@@ -149,7 +217,7 @@
                     <div class="glass-card p-3 p-md-4 h-100">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="text-light opacity-75 extra-small d-block">Pending Preparation</span>
+                                <span class="text-light opacity-75 extra-small d-block">Pending Prep</span>
                                 <h4 class="fw-bold text-warning mb-0" id="statPendingOrders">0</h4>
                             </div>
                             <div class="fs-2 text-warning opacity-75"><i class="bi bi-hourglass-split"></i></div>
@@ -317,7 +385,6 @@
             measurementId: "G-4GDMM90MH6"
         };
 
-        // Create an isolated secondary App instance for Admin
         const adminApp = getApps().some(a => a.name === "adminApp") 
             ? getApp("adminApp") 
             : initializeApp(firebaseConfig, "adminApp");
@@ -325,7 +392,6 @@
         const auth = getAuth(adminApp);
         const db = getFirestore(adminApp);
 
-        // Keep admin auth isolated to session storage
         setPersistence(auth, browserSessionPersistence).catch(console.error);
 
         const loginWrapper = document.getElementById('adminLoginWrapper');
@@ -646,7 +712,8 @@
                                     </div>
                                 </div>
 
-                                <div class="row g-1 pt-1">
+                                <!-- Balanced 2x2 Grid for Mobile Action Buttons -->
+                                <div class="row g-2 pt-2 border-top border-light border-opacity-10">
                                     <div class="col-6">
                                         <button class="btn btn-outline-warning w-100 action-btn-mobile ${status === 'Preparing' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Preparing')">
                                             <i class="bi bi-hourglass-split"></i> Preparing
@@ -657,12 +724,12 @@
                                             <i class="bi bi-truck"></i> Dispatch
                                         </button>
                                     </div>
-                                    <div class="col-8">
+                                    <div class="col-6">
                                         <button class="btn btn-outline-success w-100 action-btn-mobile ${status === 'Delivered' ? 'active' : ''}" onclick="changeStatus('${ord.firebaseId}', 'Delivered')">
-                                            <i class="bi bi-check-circle"></i> Mark Delivered
+                                            <i class="bi bi-check-circle"></i> Delivered
                                         </button>
                                     </div>
-                                    <div class="col-4">
+                                    <div class="col-6">
                                         <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="archiveOrder('${ord.firebaseId}')">
                                             <i class="bi bi-x-circle"></i> Void
                                         </button>
@@ -705,12 +772,12 @@
                                 <td><span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50">${canceledSource}</span></td>
                                 <td><span class="text-light opacity-50">${totalDisplay}</span></td>
                                 <td class="text-end">
-                                    <div class="d-inline-flex gap-1">
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="restoreOrder('${ord.firebaseId}')" title="Restore to Active">
-                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                    <div class="d-inline-flex gap-2">
+                                        <button class="btn btn-sm btn-restore rounded-pill px-3 py-1" onclick="restoreOrder('${ord.firebaseId}')" title="Restore to Active">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="permanentDeleteOrder('${ord.firebaseId}')" title="Delete Permanently">
-                                            <i class="bi bi-trash"></i>
+                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" onclick="permanentDeleteOrder('${ord.firebaseId}')" title="Delete Permanently">
+                                            <i class="bi bi-trash me-1"></i> Delete
                                         </button>
                                     </div>
                                 </td>
@@ -727,13 +794,17 @@
                                     <span class="text-decoration-line-through">${itemDisplay}</span> (${totalDisplay})<br>
                                     <span class="extra-small">${addressDisplay}</span>
                                 </div>
-                                <div class="d-flex gap-1">
-                                    <button class="btn btn-sm btn-outline-secondary flex-fill action-btn-mobile" onclick="restoreOrder('${ord.firebaseId}')">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Restore
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger flex-fill action-btn-mobile" onclick="permanentDeleteOrder('${ord.firebaseId}')">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </button>
+                                <div class="row g-2 pt-1 border-top border-light border-opacity-10">
+                                    <div class="col-6">
+                                        <button class="btn btn-restore w-100 action-btn-mobile" onclick="restoreOrder('${ord.firebaseId}')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-danger w-100 action-btn-mobile" onclick="permanentDeleteOrder('${ord.firebaseId}')">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         `;
